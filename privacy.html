@@ -4,40 +4,157 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Privacy Policy — Cale</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap");
+
+      :root {
+        --bg: #f0f4ff;
+        --surface: #ffffff;
+        --border: #e2e2dc;
+        --accent: #0d7bff;
+        --text: #1a1a1a;
+        --text-mid: #4a4a4a;
+        --text-muted: #888880;
+        --radius: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      /* Same ambient gradient used on the pitch site and app */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse 70% 60% at 80% 10%, rgba(195, 185, 255, 0.35) 0%, transparent 60%),
+          radial-gradient(ellipse 50% 50% at 10% 80%, rgba(13, 123, 255, 0.13) 0%, transparent 55%),
+          radial-gradient(ellipse 40% 40% at 50% 100%, rgba(195, 185, 255, 0.15) 0%, transparent 50%),
+          var(--bg);
+      }
+
+      header {
+        background: rgba(240, 244, 255, 0.88);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 1px 0 rgba(13, 123, 255, 0.1);
+        padding: 14px 28px;
+        display: flex;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        width: 100%;
+      }
+
+      .cale-logo-lockup {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: inherit;
+      }
+      .cale-logo-lockup img {
+        width: 26px;
+        height: 26px;
+        display: block;
+        border-radius: 6px;
+      }
+      .cale-wordmark {
+        font-family: "Sora", sans-serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+
+      .page-body {
+        padding: 40px 28px 60px;
+        max-width: 780px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .page-intro {
+        margin-bottom: 24px;
+      }
+      .page-intro h1 {
+        font-family: "Sora", sans-serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .page-intro p {
+        color: var(--text-muted);
+        font-size: 0.88rem;
+      }
+
+      .dashboard-about {
+        padding: 18px 22px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 0.92rem;
+        color: var(--text-mid);
+        line-height: 1.65;
+      }
+      .dashboard-about strong {
+        color: var(--text);
+      }
+
+      .footer-note {
+        margin-top: 24px;
+        font-size: 0.85rem;
+      }
+      .footer-note a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .footer-note a:hover {
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body>
-    <main
-      style="
-        max-width: 780px;
-        margin: 36px auto;
-        padding: 20px;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        color: #0D1B3E;
-      "
-    >
-      <h1 style="font-family: 'Sora', sans-serif; margin-bottom: 16px;">Privacy Policy</h1>
-      <p>
-        This application ("Cale") connects to the Google Calendar API to
-        read student session bookings. We only request read-only access
-        (calendar.readonly) to calculate student-to-teacher ratios in real-time.
-        We do not store, save, or share any of your Google calendar data or
-        personal information on our servers, and no data is shared with third
-        parties.
-      </p>
-      <div
-        style="
-          margin-top: 18px;
-          font-size: 0.9rem;
-          color: #666;
-          display: flex;
-          gap: 12px;
-          align-items: center;
-        "
-      >
-        <a href="index.html" style="color: inherit; text-decoration: underline">Home</a>
+    <header>
+      <a class="cale-logo-lockup" href="index.html">
+        <img src="logo.svg" alt="Cale logo" />
+        <span class="cale-wordmark">Cale</span>
+      </a>
+    </header>
+
+    <main class="page-body">
+      <div class="page-intro">
+        <h1>Privacy Policy</h1>
+        <p>How Cale handles your data</p>
       </div>
+
+      <div class="dashboard-about">
+        <p>
+          This application (<strong>Cale</strong>) connects to the Google
+          Calendar API to read student session bookings. We only request
+          read-only access (<strong>calendar.readonly</strong>) to calculate
+          student-to-teacher ratios in real-time. We do not store, save, or
+          share any of your Google calendar data or personal information on
+          our servers, and no data is shared with third parties.
+        </p>
+      </div>
+
+      <p class="footer-note"><a href="index.html">← Back to home</a></p>
     </main>
   </body>
 </html>
