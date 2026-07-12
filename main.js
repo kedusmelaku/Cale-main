@@ -218,16 +218,20 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = form.querySelector('.email-submit');
+    const errBox = $('#formError');
+    errBox.hidden = true;
     btn.disabled = true;
     btn.textContent = 'Sending…';
     try {
       const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
       if (!res.ok) throw new Error('bad status');
       form.hidden = true;
+      errBox.hidden = true;
       $('#formSuccess').hidden = false;
     } catch {
       btn.disabled = false;
       btn.textContent = 'Try again';
+      errBox.hidden = false;
     }
   });
 

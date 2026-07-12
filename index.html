@@ -109,7 +109,7 @@
         <div class="container approvals-inner">
           <svg class="approval-lines" id="approvalLines" viewBox="0 0 100 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
             <defs>
-              <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="lineGrad" gradientUnits="userSpaceOnUse" x1="50" y1="0" x2="50" y2="200">
                 <stop offset="0%" stop-color="#0D7BFF" />
                 <stop offset="100%" stop-color="#9F8FFF" />
               </linearGradient>
@@ -123,15 +123,37 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 Pasted from Cale
               </div>
-              <pre class="msg-text">Here are the hours for this week 👇
+              <pre class="msg-text">Hours for Monday (7/13)
 
-Mon 7/13   Sam 3–8 · Jordan 3–6 · Morgan 3–8
-Tue 7/14   Sam 3–8 · Jordan 3–8 · Casey 5–8
-Wed 7/15   Sam 3–8 · Morgan 4–8
-Thu 7/16   Sam 3–8 · Jordan 3–8
-Sat 7/18   Jordan 10–2 · Sam 12–2 · Morgan 12–2
+Sam : 3-8
+Jordan : 3-6
+Morgan : 3-8
 
-Sam 24h · Jordan 17h · Morgan 12.5h · Casey 2.5h</pre>
+
+Hours for Tuesday (7/14)
+
+Sam : 3-8
+Jordan : 3-8
+Casey : 3-5
+
+
+Hours for Wednesday (7/15)
+
+Sam : 3-8
+Morgan : 3-8
+
+
+Hours for Thursday (7/16)
+
+Sam : 3-8
+Jordan : 3-8
+
+
+Hours for Saturday (7/18)
+
+Jordan : 10-2
+Sam : 12-2
+Morgan : 12-2</pre>
             </div>
             <div class="msg-meta">Sent to staff group · just now</div>
           </div>
@@ -192,6 +214,7 @@ Sam 24h · Jordan 17h · Morgan 12.5h · Casey 2.5h</pre>
             <button class="email-submit" type="submit">Request access</button>
           </form>
           <div class="form-success" id="formSuccess" hidden><span class="tick">✓</span> You're on the list — we'll be in touch soon.</div>
+          <div class="form-error" id="formError" hidden>Something went wrong. Please try again, or email <a href="mailto:kedusmela@gmail.com">kedusmela@gmail.com</a> directly.</div>
           <div class="cta-note">No credit card. Cancel anytime.</div>
         </div>
 
