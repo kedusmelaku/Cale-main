@@ -11,10 +11,204 @@
     <meta property="og:description" content="Scheduling that runs itself. Built for tutoring centers." />
     <meta property="og:type" content="website" />
     <title>Cale — Smart Staff Scheduling</title>
-    <script type="module" crossorigin src="./assets/cale.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/styles.css">
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script defer src="./main.js"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div class="field" aria-hidden="true"></div>
+    <div class="progress" aria-hidden="true"></div>
+
+    <nav class="nav" id="nav">
+      <a href="#top" class="brand"><img src="./logo.svg" alt="Cale logo" /> Cale</a>
+      <div class="nav-links" id="navLinks">
+        <a href="#story">How it works</a>
+        <a href="#extras">Features</a>
+        <a class="nav-cta" href="#access">Request access</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </nav>
+
+    <main class="wrap" id="top">
+
+      <!-- ============ ACT 1 — HERO (text-only intro) ============ -->
+      <section class="hero" id="hero">
+        <div class="hero-inner">
+          <div class="hero-copy" id="heroCopy">
+            <div class="hero-badge">Smart scheduling for tutoring centers</div>
+            <h1>Scheduling that<br /><span class="shimmer">runs itself</span></h1>
+            <p class="lead">Cale collects staff availability, cross-references your student calendar, and generates a ready-to-send schedule — in minutes, not hours.</p>
+            <div class="how-strip" id="howStrip" role="group" aria-label="How Cale works">
+              <div class="how-step">
+                <div class="how-ico">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </div>
+                <div class="how-label">Share a link</div>
+              </div>
+              <span class="how-arrow" aria-hidden="true">
+                <svg width="34" height="12" viewBox="0 0 34 12" fill="none"><path d="M1 6H28" stroke="#4C86F5" stroke-width="2" stroke-linecap="round"/><path d="M27 2l5 4-5 4" stroke="#6E77E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div class="how-step">
+                <div class="how-ico">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
+                </div>
+                <div class="how-label">Cale builds the week</div>
+              </div>
+              <span class="how-arrow" aria-hidden="true">
+                <svg width="34" height="12" viewBox="0 0 34 12" fill="none"><path d="M1 6H28" stroke="#4C86F5" stroke-width="2" stroke-linecap="round"/><path d="M27 2l5 4-5 4" stroke="#6E77E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div class="how-step">
+                <div class="how-ico">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </div>
+                <div class="how-label">Paste &amp; send</div>
+              </div>
+            </div>
+          </div>
+          <div class="scroll-hint" aria-hidden="true">
+            <span>Scroll</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ACT 2 — THE SCRAMBLE → GENERATE → FORMS → SCHEDULE (pinned scrub) ============ -->
+      <section id="story">
+        <div class="story-head">
+          <div class="tag">Sound familiar?</div>
+          <h2>Every week, the same scramble.</h2>
+        </div>
+
+        <div class="stage-pin" id="stagePin">
+          <div class="stage" id="stage">
+            <div class="forms-layer" id="formsLayer"><!-- 2×4 availability forms injected by JS --></div>
+            <div class="sched-layer">
+              <div class="glow-ring" id="glowRing" aria-hidden="true"></div>
+              <div class="window sched-window" id="storySched"><!-- schedule mock injected by JS --></div>
+            </div>
+            <div class="chaos-layer" id="chaosLayer"><!-- bubbles injected by JS -->
+              <button class="gen-btn" id="genBtn" type="button" tabindex="-1">Generate Schedule</button>
+            </div>
+            <div class="desc-layer">
+              <div class="desc-card" id="descCard">
+                <h3>Staff submit availability through one link.</h3>
+                <p>Share the form. Each person enters their PIN, checks the days they can work, and sets their hours. No accounts, no passwords, no app to install.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ACT 3 — LINE → COPIED RESULT → STAFF APPROVE ============ -->
+      <section class="approvals" id="approvals" aria-label="The finished schedule, pasted to your staff and approved">
+        <div class="container approvals-inner">
+          <svg class="approval-lines" id="approvalLines" viewBox="0 0 100 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <defs>
+              <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#0D7BFF" />
+                <stop offset="100%" stop-color="#9F8FFF" />
+              </linearGradient>
+            </defs>
+            <path class="a-line" d="M50,0 C50,70 50,130 50,200" />
+          </svg>
+
+          <div class="result-msg" id="resultMsg">
+            <div class="msg-bubble">
+              <div class="msg-head">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Pasted from Cale
+              </div>
+              <pre class="msg-text">Here are the hours for this week 👇
+
+Mon 7/13   Sam 3–8 · Jordan 3–6 · Morgan 3–8
+Tue 7/14   Sam 3–8 · Jordan 3–8 · Casey 5–8
+Wed 7/15   Sam 3–8 · Morgan 4–8
+Thu 7/16   Sam 3–8 · Jordan 3–8
+Sat 7/18   Jordan 10–2 · Sam 12–2 · Morgan 12–2
+
+Sam 24h · Jordan 17h · Morgan 12.5h · Casey 2.5h</pre>
+            </div>
+            <div class="msg-meta">Sent to staff group · just now</div>
+          </div>
+
+          <div class="people" id="people"><!-- profile icons injected by JS --></div>
+        </div>
+      </section>
+
+      <!-- ============ ACT 4 — UNDER THE HOOD (floating cards) ============ -->
+      <section class="section" id="extras">
+        <div class="container">
+          <div class="section-head reveal">
+            <div class="tag">Under the hood</div>
+            <h2>Small details, big time savings.</h2>
+          </div>
+          <div class="trio">
+            <div class="trio-card reveal float f1">
+              <div class="trio-ico">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+              <h3>PIN-based access</h3>
+              <p>Every staff member gets a unique PIN. They enter it, submit, done — no account creation standing between them and the form.</p>
+            </div>
+            <div class="trio-card reveal float f2" style="transition-delay:0.08s">
+              <div class="trio-ico">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <h3>Google Calendar sync</h3>
+              <p>Connect once. Cale reads your student session data and weighs real demand into every schedule it generates.</p>
+            </div>
+            <div class="trio-card reveal float f3" style="transition-delay:0.16s">
+              <div class="trio-ico">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </div>
+              <h3>Copy-ready hours</h3>
+              <p>The finished week formats itself for your clipboard — every shift, every person, ready to paste wherever you send schedules.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ACT 5 — DARK CTA + FOOTER ============ -->
+      <section class="cta-flow" id="access">
+        <div class="flow-bg" aria-hidden="true">
+          <div class="blob b1"></div>
+          <div class="blob b2"></div>
+          <div class="blob b3"></div>
+        </div>
+        <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+        <div class="container cta-content">
+          <h2>Ready to reclaim your weekends?</h2>
+          <p class="cta-sub">Get Cale running for your center — free for the first two weeks, no commitment.</p>
+          <form class="email-form" id="accessForm" action="https://formspree.io/f/mbdnrkdk" method="POST">
+            <input class="email-input" type="email" name="email" required placeholder="you@yourcenter.com" aria-label="Your email" />
+            <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
+            <input type="hidden" name="_subject" value="Cale access request" />
+            <button class="email-submit" type="submit">Request access</button>
+          </form>
+          <div class="form-success" id="formSuccess" hidden><span class="tick">✓</span> You're on the list — we'll be in touch soon.</div>
+          <div class="cta-note">No credit card. Cancel anytime.</div>
+        </div>
+
+        <footer class="footer footer-dark">
+          <div class="container footer-inner">
+            <a href="#top" class="brand"><img src="./logo.svg" alt="Cale logo" /> Cale</a>
+            <div class="footer-links">
+              <a href="#story">How it works</a>
+              <a href="#extras">Features</a>
+              <a href="privacy.html">Privacy</a>
+              <a href="mailto:kedusmela@gmail.com">Contact</a>
+            </div>
+            <div class="footer-copy">Built for tutoring centers. Made with care.</div>
+          </div>
+        </footer>
+      </section>
+
+    </main>
   </body>
 </html>
