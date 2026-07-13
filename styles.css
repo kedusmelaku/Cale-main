@@ -576,7 +576,7 @@ body {
   position: relative;
   margin-top: 40px;
   overflow: hidden;
-  background: linear-gradient(160deg, #0A2352 0%, #0D3F92 46%, #123A86 72%, #0A2352 100%);
+  background: linear-gradient(160deg, #0A2352 0%, #123A86 36%, #43398F 60%, #123A86 80%, #0A2352 100%);
   isolation: isolate;
 }
 .flow-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
@@ -591,13 +591,13 @@ body {
 }
 .flow-bg::before {
   border-radius: 44% 56% 52% 48%;
-  background: radial-gradient(closest-side, rgba(122,91,224,0.30), transparent 68%);
-  animation: swirlA 46s ease-in-out infinite;
+  background: radial-gradient(closest-side, rgba(138,104,240,0.42), transparent 68%);
+  animation: swirlA 34s ease-in-out infinite;
 }
 .flow-bg::after {
   border-radius: 56% 44% 48% 52%;
-  background: radial-gradient(closest-side, rgba(13,123,255,0.28), transparent 68%);
-  animation: swirlB 61s ease-in-out infinite;
+  background: radial-gradient(closest-side, rgba(13,123,255,0.30), transparent 68%);
+  animation: swirlB 44s ease-in-out infinite;
 }
 @keyframes swirlA {
   0%   { transform: rotate(0deg) translate(-4%, 2%) scale(1); }
@@ -609,43 +609,43 @@ body {
   50%  { transform: rotate(170deg) translate(-5%, 4%) scale(0.94); }
   100% { transform: rotate(0deg) translate(4%, -2%) scale(1.12); }
 }
-/* soft blobs that wander through the visible area on non-repeating loops */
-.blob { position: absolute; border-radius: 50%; filter: blur(80px); mix-blend-mode: screen; will-change: transform; }
+/* soft blobs that wander + fade in and out on non-repeating loops */
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); mix-blend-mode: screen; will-change: transform, opacity; }
 .blob.b1 {
   width: 520px; height: 520px; top: 6%; left: 10%;
-  background: radial-gradient(circle, rgba(159,143,255,0.55), transparent 66%);
-  animation: floatA 25s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(168,150,255,0.6), transparent 66%);
+  animation: floatA 19s ease-in-out infinite;
 }
 .blob.b2 {
   width: 460px; height: 460px; top: 34%; right: 6%;
-  background: radial-gradient(circle, rgba(13,123,255,0.5), transparent 66%);
-  animation: floatB 33s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(13,123,255,0.52), transparent 66%);
+  animation: floatB 25s ease-in-out infinite;
 }
 .blob.b3 {
   width: 440px; height: 440px; bottom: 4%; left: 32%;
-  background: radial-gradient(circle, rgba(195,185,255,0.45), transparent 66%);
-  animation: floatC 29s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(195,185,255,0.5), transparent 66%);
+  animation: floatC 22s ease-in-out infinite;
 }
 @keyframes floatA {
-  0%   { transform: translate(0, 0) scale(1); }
-  25%  { transform: translate(70px, 46px) scale(1.1); }
-  50%  { transform: translate(34px, 104px) scale(0.94); }
-  75%  { transform: translate(-46px, 54px) scale(1.06); }
-  100% { transform: translate(0, 0) scale(1); }
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.55; }
+  25%  { transform: translate(70px, 46px) scale(1.1); opacity: 0.95; }
+  50%  { transform: translate(34px, 104px) scale(0.94); opacity: 0.45; }
+  75%  { transform: translate(-46px, 54px) scale(1.06); opacity: 0.85; }
+  100% { transform: translate(0, 0) scale(1); opacity: 0.55; }
 }
 @keyframes floatB {
-  0%   { transform: translate(0, 0) scale(1.04); }
-  30%  { transform: translate(-84px, 40px) scale(0.92); }
-  55%  { transform: translate(-40px, -70px) scale(1.12); }
-  80%  { transform: translate(40px, -30px) scale(1); }
-  100% { transform: translate(0, 0) scale(1.04); }
+  0%   { transform: translate(0, 0) scale(1.04); opacity: 0.5; }
+  30%  { transform: translate(-84px, 40px) scale(0.92); opacity: 0.9; }
+  55%  { transform: translate(-40px, -70px) scale(1.12); opacity: 0.55; }
+  80%  { transform: translate(40px, -30px) scale(1); opacity: 0.85; }
+  100% { transform: translate(0, 0) scale(1.04); opacity: 0.5; }
 }
 @keyframes floatC {
-  0%   { transform: translate(0, 0) scale(0.98); }
-  25%  { transform: translate(64px, -50px) scale(1.1); }
-  50%  { transform: translate(-30px, -88px) scale(1); }
-  75%  { transform: translate(-72px, -24px) scale(0.9); }
-  100% { transform: translate(0, 0) scale(0.98); }
+  0%   { transform: translate(0, 0) scale(0.98); opacity: 0.6; }
+  25%  { transform: translate(64px, -50px) scale(1.1); opacity: 0.4; }
+  50%  { transform: translate(-30px, -88px) scale(1); opacity: 0.9; }
+  75%  { transform: translate(-72px, -24px) scale(0.9); opacity: 0.55; }
+  100% { transform: translate(0, 0) scale(0.98); opacity: 0.6; }
 }
 .cursor-glow {
   position: absolute; z-index: 1;
