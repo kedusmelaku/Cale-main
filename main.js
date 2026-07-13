@@ -278,7 +278,7 @@
     sides.forEach((el) => gsap.set(el, { x: el._start.x, y: el._start.y, rotation: el._start.r }));
     gsap.set(pops, { xPercent: -50, yPercent: -50, opacity: 0, scale: 0 });
     pops.forEach((el) => gsap.set(el, { x: el._end.x, y: el._end.y, rotation: el._end.r }));
-    gsap.set(genBtn, { xPercent: -50, yPercent: -50, scale: 0, opacity: 0 });
+    gsap.set(genBtn, { x: 0, y: 0, xPercent: -50, yPercent: -50, scale: 0, opacity: 0 });
     gsap.set(descCard, { opacity: 0, y: 28 });
     gsap.set(schedWin, { opacity: 0 });
     gsap.set(cols, { opacity: 0, y: 14, scale: 0.95 });
@@ -325,18 +325,18 @@
       .to(genBtn, { scale: 1.05, ease: 'power2.out', duration: 0.7 }, 30.2)
       .to(genBtn, { scale: 1, duration: 0.6 }, 30.9);
 
-    /* beat 4 — the click dispels the pile */
+    /* beat 4 — the click dispels the pile (completes before anything else happens) */
     sides.forEach((el, i) => {
-      tl.to(el, { x: el._start.x * 1.06, y: el._start.y, rotation: el._start.r, opacity: 0, ease: 'power2.in', duration: 3 }, 32 + i * 0.12);
+      tl.to(el, { x: el._start.x * 1.06, y: el._start.y, rotation: el._start.r, opacity: 0, ease: 'power2.in', duration: 2.2 }, 32 + i * 0.06);
     });
-    tl.to(pops, { opacity: 0, scale: 0.5, ease: 'power1.in', duration: 1.8, stagger: 0.08 }, 32);
-    tl.to(genBtn, { opacity: 0, scale: 0.5, ease: 'power2.in', duration: 1.8 }, 33.2);
+    tl.to(pops, { opacity: 0, scale: 0.5, ease: 'power1.in', duration: 1.6, stagger: 0.06 }, 32);
+    tl.to(genBtn, { opacity: 0, scale: 0.5, ease: 'power2.in', duration: 1.8 }, 33);
 
-    /* beat 5 — the 2×4 availability forms are revealed underneath, filling out */
-    tl.fromTo(cards, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 2, stagger: 0.3 }, 33);
+    /* beat 5 — a beat passes, THEN the 2×4 availability forms are revealed underneath, filling out */
+    tl.fromTo(cards, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 2, stagger: 0.3 }, 37);
     cards.forEach((card, f) => {
       $$('.day-row.fills', card).forEach((row, r) => {
-        const at = 36.5 + f * 1.5 + r * 1.3;
+        const at = 39.5 + f * 1.5 + r * 1.3;
         const box = $('.box', row);
         tl.to(row, { backgroundColor: '#EFF5FF', borderColor: 'rgba(13,123,255,0.45)', duration: 0.9 }, at)
           .to(box, { backgroundColor: '#0D7BFF', borderColor: '#0D7BFF', duration: 0.9 }, at)
@@ -346,8 +346,8 @@
     });
 
     /* glass description card over the forms */
-    tl.to(descCard, { opacity: 1, y: 0, duration: 2.5 }, 44)
-      .to(descCard, { opacity: 0, y: -20, ease: 'power1.in', duration: 2 }, 57);
+    tl.to(descCard, { opacity: 1, y: 0, duration: 2.5 }, 46)
+      .to(descCard, { opacity: 0, y: -20, ease: 'power1.in', duration: 2 }, 58);
 
     /* beat 6 — brief beat of fully-filled forms, then contents vanish fast */
     tl.to($$('.mini-form-inner'), { opacity: 0, duration: 1.6, stagger: 0.05, ease: 'power1.in' }, 60.5);
@@ -407,40 +407,90 @@
     /* settle room so the glowing schedule holds before the pin releases */
     tl.to({}, { duration: 100 - tl.duration() > 0 ? 100 - tl.duration() : 6 });
 
-    /* ---------- Act 3: line draws down to the copied result, staff approve ---------- */
-    const paths = $$('.a-line');
+    /* ---------- Act 3: line wraps the copied result, staff approve ---------- */
+    const svg = $('#approvalLines');
+    const stem = $('.a-stem', svg);
+    const wraps = $$('.a-wrap', svg);
+    const grad = $('#lineGrad');
+    const inner = $('#approvalsInner');
+    const bubble = $('#msgBubble');
     const msg = $('#resultMsg');
     const thumbs = $$('.thumb');
     const avatars = $$('.person');
-    paths.forEach((p) => {
-      const len = p.getTotalLength();
-      gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
-    });
-    gsap.set(msg, { opacity: 0, y: 20, scale: 0.96 });
-    gsap.set(avatars, { opacity: 0, y: 14 });
+
+    /* build the stem + two wrapping half-outlines from the measured bubble */
+    function layoutApprovals() {
+      const ir = inner.getBoundingClientRect();
+      const br = bubble.getBoundingClientRect();
+      const W = ir.width, H = ir.height;
+      const x = br.left - ir.left, y = br.top - ir.top;
+      const w = br.width, h = br.height;
+      const cx = x + w / 2;
+      const rTL = 20, rTR = 20, rBR = 20, rBL = 7; /* matches the bubble's border-radius */
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      grad.setAttribute('x1', cx); grad.setAttribute('y1', 0);
+      grad.setAttribute('x2', cx); grad.setAttribute('y2', y + h);
+      /* stem: from the top of the section down to the top-center of the bubble */
+      stem.setAttribute('d', `M${cx},0 L${cx},${y}`);
+      /* right half: top-center, clockwise around to bottom-center */
+      $('.a-right', svg).setAttribute('d',
+        `M${cx},${y} H${x + w - rTR} A${rTR},${rTR} 0 0 1 ${x + w},${y + rTR} V${y + h - rBR} A${rBR},${rBR} 0 0 1 ${x + w - rBR},${y + h} H${cx}`);
+      /* left half: top-center, counter-clockwise around to bottom-center */
+      $('.a-left', svg).setAttribute('d',
+        `M${cx},${y} H${x + rTL} A${rTL},${rTL} 0 0 0 ${x},${y + rTL} V${y + h - rBL} A${rBL},${rBL} 0 0 0 ${x + rBL},${y + h} H${cx}`);
+    }
+    layoutApprovals();
+
+    gsap.set([stem, ...wraps], { strokeDashoffset: 1 });
+    gsap.set(svg, { '--glow': 0 });
+    gsap.set(msg, { opacity: 0 });
+    gsap.set(avatars, { opacity: 0, scale: 0.4, y: 0 });
     gsap.set(thumbs, { scale: 0 });
 
     const lines = gsap.timeline({
-      scrollTrigger: { trigger: '#approvals', start: 'top 80%', end: 'bottom 98%', scrub: 0.6 },
+      scrollTrigger: { trigger: '#approvals', start: 'top 78%', end: 'bottom 42%', scrub: 0.6 },
     });
-    /* the glowing line draws downward from the (now scrolled-away) schedule */
-    paths.forEach((p) => lines.to(p, { strokeDashoffset: 0, ease: 'none', duration: 4 }, 0));
-    /* the copied schedule lands as a message at the end of the line */
-    lines.to(msg, { opacity: 1, y: 0, scale: 1, ease: 'back.out(1.4)', duration: 2.4 }, 3.4);
-    /* staff appear and approve it, one after another */
-    avatars.forEach((a, i) => lines.to(a, { opacity: 1, y: 0, duration: 1.4 }, 6.3 + i * 0.5));
-    thumbs.forEach((t, i) => lines.to(t, { scale: 1, ease: 'back.out(2.6)', duration: 1.1 }, 7.7 + i * 0.5));
+    /* stem draws down from the schedule */
+    lines.to(stem, { strokeDashoffset: 0, ease: 'none', duration: 4 }, 0);
+    /* the copied schedule fades in as the stem reaches it */
+    lines.to(msg, { opacity: 1, ease: 'power2.out', duration: 2 }, 3);
+    /* the line splits and traces both sides of the bubble, glow intensifying */
+    lines.to(wraps, { strokeDashoffset: 0, ease: 'none', duration: 5.5 }, 4.4);
+    lines.to(svg, { '--glow': 1, ease: 'power1.in', duration: 5.5 }, 4.4);
+
+    /* long beat so the reader catches up to the message before staff react */
+    const n = avatars.length;
+
+    /* profiles pop in, left → right */
+    const AV_START = 14;
+    avatars.forEach((a, i) => {
+      lines.to(a, { opacity: 1, scale: 1, ease: 'back.out(1.8)', duration: 1.1 }, AV_START + i * 0.6);
+    });
+
+    /* thumbs-up wave, right → left: each profile rises as its thumb pops, then settles */
+    const TH_START = 19;
+    avatars.forEach((a, i) => {
+      const order = n - 1 - i;           /* rightmost reacts first */
+      const t = TH_START + order * 0.7;
+      lines.to(a, { y: -16, ease: 'power2.out', duration: 0.55 }, t);
+      lines.to(thumbs[i], { scale: 1, ease: 'back.out(2.6)', duration: 0.6 }, t + 0.12);
+      lines.to(a, { y: 0, ease: 'power2.inOut', duration: 0.65 }, t + 0.55);
+    });
 
     ScrollTrigger.refresh();
 
-    /* fonts can nudge heights by a few px — re-hug the ring and refresh once they're in */
-    (document.fonts?.ready || Promise.resolve()).then(() => {
+    /* fonts/resize change the bubble height — re-measure everything and rebuild the wrap */
+    const relayout = () => {
       ring.style.left = `${schedWin.offsetLeft}px`;
       ring.style.top = `${schedWin.offsetTop}px`;
       ring.style.width = `${schedWin.offsetWidth}px`;
       ring.style.height = `${schedWin.offsetHeight}px`;
+      layoutApprovals();
       ScrollTrigger.refresh();
-    });
+    };
+    (document.fonts?.ready || Promise.resolve()).then(relayout);
+    let rz;
+    addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(relayout, 180); });
   }
 
   init();
