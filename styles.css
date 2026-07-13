@@ -291,9 +291,14 @@ body {
   line-height: 1.08; letter-spacing: -0.03em;
 }
 .stage-pin {
+  position: relative;
   height: 100vh; height: 100svh;
-  display: flex; align-items: center; justify-content: center;
   overflow: hidden;
+}
+.stage-travel {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  will-change: transform;
 }
 .stage {
   position: relative;
@@ -571,15 +576,15 @@ body {
   position: relative;
   margin-top: 40px;
   overflow: hidden;
-  background: linear-gradient(150deg, #0B2A5E 0%, #0D50B8 38%, #6A5BD8 72%, #0D50B8 100%);
-  background-size: 200% 200%;
-  animation: ctaFlow 26s ease-in-out infinite alternate;
+  background: linear-gradient(150deg, #0B2A5E 0%, #0D50B8 34%, #7A5BE0 60%, #0D50B8 82%, #0B2A5E 100%);
+  background-size: 300% 300%;
+  animation: ctaFlow 11s ease-in-out infinite alternate;
   isolation: isolate;
 }
 @keyframes ctaFlow {
   0%   { background-position: 0% 0%; }
-  50%  { background-position: 100% 45%; }
-  100% { background-position: 40% 100%; }
+  50%  { background-position: 100% 55%; }
+  100% { background-position: 30% 100%; }
 }
 .flow-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 .blob { position: absolute; border-radius: 50%; filter: blur(70px); mix-blend-mode: screen; }

@@ -263,8 +263,9 @@
     cols.forEach((c) => $$('.blk', c).forEach((b) => blocks.push(b)));
     const hourEls = $$('.val[data-hours]', schedWin);
 
-    /* line A — hangs from under the schedule down to the screen edge */
+    /* line A — hangs from under the schedule down past the screen edge */
     const stagePin = $('#stagePin');
+    const stageTravel = $('#stageTravel');
     const stemDownSvg = $('#stemDown');
     const stemDown = $('.a-stem-down', stemDownSvg);
     let stemDownLen = 0;
@@ -277,7 +278,8 @@
       const cx = (sr.left + sr.right) / 2 - pr.left;
       const startY = (sr.top - pr.top) + sr.height * 0.5; /* start mid-schedule so it sits under it */
       stemDownSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      stemDown.setAttribute('d', `M${cx},${startY} L${cx},${H}`);
+      /* draw well past the bottom so the line still fills the screen while it travels up */
+      stemDown.setAttribute('d', `M${cx},${startY} L${cx},${H * 1.7}`);
       stemDownLen = stemDown.getTotalLength();
       stemDown.style.strokeDasharray = stemDownLen;
       applyStemDown();
@@ -319,6 +321,7 @@
         scrub: 0.6,
         pin: true,
         anticipatePin: 1,
+        invalidateOnRefresh: true,
         onUpdate(self) {
           const p = self.progress;
           stage.classList.toggle('vibrate', p > 0.10 && p < 0.38);
@@ -424,9 +427,11 @@
     tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 85.5)
       .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 86.9);
 
-    /* line A grows downward out of the schedule, reaching toward Act 3 */
+    /* line A grows downward out of the schedule, then the schedule + line travel
+       upward together — so scrolling feels like descending the line toward the message */
     layoutStemDown();
-    tl.to(stemDownProg, { v: 1, ease: 'none', duration: 8, onUpdate: applyStemDown }, 89);
+    tl.to(stemDownProg, { v: 1, ease: 'none', duration: 4, onUpdate: applyStemDown }, 87);
+    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'none', duration: 11 }, 89);
 
     /* settle room so the glowing schedule holds before the pin releases */
     tl.to({}, { duration: 100 - tl.duration() > 0 ? 100 - tl.duration() : 6 });
