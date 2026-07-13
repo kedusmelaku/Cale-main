@@ -297,9 +297,24 @@ body {
 }
 .stage {
   position: relative;
+  z-index: 1;
   width: 1000px; height: 640px;
   flex: none;
   transform-origin: 50% 50%;
+}
+/* line A — hangs from under the schedule down to the screen edge (connects to Act 3's line) */
+.stem-down {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible; pointer-events: none;
+  z-index: 0;
+}
+.a-stem-down {
+  fill: none;
+  stroke: #9F8FFF;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 9px rgba(159, 143, 255, 0.85));
 }
 .forms-layer  { position: absolute; inset: 0; z-index: 1; }
 .sched-layer  { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; }
@@ -447,11 +462,12 @@ body {
 /* ---------- Act 3 — line wraps the copied result, staff approve (pinned) ---------- */
 .approvals { padding: 0; }
 .approvals-pin {
+  position: relative;
   min-height: 100vh; min-height: 100svh;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
-.approvals-inner { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; padding-top: 96px; padding-bottom: 30px; }
+.approvals-inner { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; padding-top: 20px; padding-bottom: 30px; }
 .approval-lines {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -555,8 +571,15 @@ body {
   position: relative;
   margin-top: 40px;
   overflow: hidden;
-  background: linear-gradient(150deg, #0B2A5E 0%, #0D50B8 48%, #6A5BD8 100%);
+  background: linear-gradient(150deg, #0B2A5E 0%, #0D50B8 38%, #6A5BD8 72%, #0D50B8 100%);
+  background-size: 200% 200%;
+  animation: ctaFlow 26s ease-in-out infinite alternate;
   isolation: isolate;
+}
+@keyframes ctaFlow {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 45%; }
+  100% { background-position: 40% 100%; }
 }
 .flow-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 .blob { position: absolute; border-radius: 50%; filter: blur(70px); mix-blend-mode: screen; }
@@ -726,6 +749,7 @@ body.no-anim .reveal { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .field::before, .field::after, .shimmer, .scroll-hint,
   .blob, .glow-ring::before, .trio-card.in { animation: none !important; }
+  .cta-flow { animation: none !important; }
   .stage.vibrate .bubble .bubble-inner { animation: none !important; }
   .how-step, .how-arrow { animation: none !important; opacity: 1 !important; transform: none !important; }
 }

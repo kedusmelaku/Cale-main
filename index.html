@@ -85,6 +85,9 @@
         </div>
 
         <div class="stage-pin" id="stagePin">
+          <svg class="stem-down" id="stemDown" preserveAspectRatio="none" aria-hidden="true">
+            <path class="a-stem-down" vector-effect="non-scaling-stroke" fill="none" />
+          </svg>
           <div class="stage" id="stage">
             <div class="forms-layer" id="formsLayer"><!-- 2×4 availability forms injected by JS --></div>
             <div class="sched-layer">
@@ -107,12 +110,12 @@
       <!-- ============ ACT 3 — LINE → COPIED RESULT → STAFF APPROVE (pinned) ============ -->
       <section class="approvals" id="approvals" aria-label="The finished schedule, pasted to your staff and approved">
         <div class="approvals-pin" id="approvalsPin">
-        <div class="container approvals-inner" id="approvalsInner">
           <svg class="approval-lines" id="approvalLines" viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true">
             <path class="a-stem" vector-effect="non-scaling-stroke" fill="none" />
             <path class="a-wrap a-left" vector-effect="non-scaling-stroke" fill="none" />
             <path class="a-wrap a-right" vector-effect="non-scaling-stroke" fill="none" />
           </svg>
+        <div class="container approvals-inner" id="approvalsInner">
 
           <div class="result-msg" id="resultMsg">
             <div class="msg-bubble" id="msgBubble">

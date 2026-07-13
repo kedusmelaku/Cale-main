@@ -263,6 +263,26 @@
     cols.forEach((c) => $$('.blk', c).forEach((b) => blocks.push(b)));
     const hourEls = $$('.val[data-hours]', schedWin);
 
+    /* line A — hangs from under the schedule down to the screen edge */
+    const stagePin = $('#stagePin');
+    const stemDownSvg = $('#stemDown');
+    const stemDown = $('.a-stem-down', stemDownSvg);
+    let stemDownLen = 0;
+    const stemDownProg = { v: 0 };
+    const applyStemDown = () => { stemDown.style.strokeDashoffset = stemDownLen * (1 - stemDownProg.v); };
+    function layoutStemDown() {
+      const pr = stagePin.getBoundingClientRect();
+      const sr = schedWin.getBoundingClientRect();
+      const W = pr.width, H = pr.height;
+      const cx = (sr.left + sr.right) / 2 - pr.left;
+      const startY = (sr.top - pr.top) + sr.height * 0.5; /* start mid-schedule so it sits under it */
+      stemDownSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      stemDown.setAttribute('d', `M${cx},${startY} L${cx},${H}`);
+      stemDownLen = stemDown.getTotalLength();
+      stemDown.style.strokeDasharray = stemDownLen;
+      applyStemDown();
+    }
+
     /* size + place the glow ring to hug the schedule window */
     ring.style.left = `${schedWin.offsetLeft}px`;
     ring.style.top = `${schedWin.offsetTop}px`;
@@ -404,6 +424,10 @@
     tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 85.5)
       .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 86.9);
 
+    /* line A grows downward out of the schedule, reaching toward Act 3 */
+    layoutStemDown();
+    tl.to(stemDownProg, { v: 1, ease: 'none', duration: 8, onUpdate: applyStemDown }, 89);
+
     /* settle room so the glowing schedule holds before the pin releases */
     tl.to({}, { duration: 100 - tl.duration() > 0 ? 100 - tl.duration() : 6 });
 
@@ -411,7 +435,7 @@
     const svg = $('#approvalLines');
     const stem = $('.a-stem', svg);
     const wraps = $$('.a-wrap', svg);
-    const inner = $('#approvalsInner');
+    const pin = $('#approvalsPin');
     const bubble = $('#msgBubble');
     const msg = $('#resultMsg');
     const thumbs = $$('.thumb');
@@ -424,17 +448,18 @@
     const applyStem = () => { stem.style.strokeDashoffset = stemLen * (1 - stemProg.v); };
     const applyWrap = () => { wraps.forEach((p, i) => { p.style.strokeDashoffset = wrapLens[i] * (1 - wrapProg.v); }); };
 
-    /* build the stem + two wrapping half-outlines from the measured bubble */
+    /* build the stem (from the top of the viewport) + two wrapping half-outlines around the bubble */
     function layoutApprovals() {
-      const ir = inner.getBoundingClientRect();
+      const pr = pin.getBoundingClientRect();
       const br = bubble.getBoundingClientRect();
-      const W = ir.width, H = ir.height;
-      const x = br.left - ir.left, y = br.top - ir.top;
+      const W = pr.width, H = pr.height;
+      const x = br.left - pr.left, y = br.top - pr.top;
       const w = br.width, h = br.height;
       const cx = x + w / 2;
       const rTL = 20, rTR = 20, rBR = 20, rBL = 7; /* matches the bubble's border-radius */
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      /* stem: from the top of the section down to the top-center of the bubble */
+      /* stem: from the very top of the pinned viewport down to the top-center of the bubble
+         (this is line B — it meets line A hanging from the schedule above) */
       stem.setAttribute('d', `M${cx},0 L${cx},${y}`);
       /* right half: top-center, clockwise around to bottom-center */
       $('.a-right', svg).setAttribute('d',
@@ -504,6 +529,7 @@
       ring.style.top = `${schedWin.offsetTop}px`;
       ring.style.width = `${schedWin.offsetWidth}px`;
       ring.style.height = `${schedWin.offsetHeight}px`;
+      layoutStemDown();
       layoutApprovals();
       ScrollTrigger.refresh();
     };
