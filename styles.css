@@ -319,6 +319,7 @@ body {
   padding: 14px 16px 16px;
   display: grid; grid-template-columns: 40px 1fr;
   gap: 8px;
+  will-change: clip-path;
 }
 .cal-gutter { display: flex; flex-direction: column; justify-content: space-between; padding: 26px 0 8px; }
 .cal-gutter span { font-size: 8.5px; color: var(--app-muted); line-height: 1; text-align: right; padding-right: 4px; }

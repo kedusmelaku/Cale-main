@@ -410,7 +410,7 @@
     gsap.set(schedBody, { opacity: 0 });
     gsap.set(schedTop, { opacity: 0 });
     gsap.set(hoursPanel, { opacity: 0 });
-    gsap.set(calBody, { opacity: 1, backgroundColor: '#FFFFFF' });
+    gsap.set(calBody, { opacity: 1, backgroundColor: '#FFFFFF', clipPath: 'inset(0% 0% 0% 0%)' });
     gsap.set(calChips, { opacity: 0, scale: 0.6, transformOrigin: '50% 0%' });
     gsap.set(scanBar, { opacity: 0, top: '0%', scaleX: 1 });
     gsap.set(cols, { opacity: 0, y: 14, scale: 0.95 });
@@ -504,30 +504,52 @@
     /* ===== NEW ACT — the window opens as a booking CALENDAR, which Cale reads ===== */
     /* student bookings pop into the week */
     tl.to(calChips, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1.4, stagger: 0.16 }, 67.5);
-    /* the "Cale reads your bookings" card stays up through the whole read */
+    /* the "Cale reads your bookings" card stays up through the read */
     tl.to(descCard2, { opacity: 1, y: 0, duration: 2 }, 71)
-      .to(descCard2, { opacity: 0, y: -20, ease: 'power1.in', duration: 1.8 }, 84);
-    /* the scan bar reads slowly through the week, top → bottom (time to read the card too) */
-    tl.set(scanBar, { opacity: 1 }, 73);
-    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'none', duration: 11 }, 73);
-    /* settle to the middle, then PAUSE (86 → 89) before wiping */
-    tl.to(scanBar, { top: '50%', ease: 'power2.inOut', duration: 2 }, 84);
-    /* collapse to a point and expand outward — erasing the calendar as the ends reach each column */
-    tl.to(scanBar, { scaleX: 0, ease: 'power2.in', duration: 1 }, 89);
-    tl.set(calBody, { backgroundColor: 'rgba(255,255,255,0)' }, 90);
-    tl.to(scanBar, { scaleX: 1, ease: 'power2.out', duration: 3 }, 90);
-    tl.to(calGutter, { opacity: 0, duration: 0.8 }, 90);
-    [2, 1, 3, 0, 4].forEach((ci, k) => {
-      tl.to(calCols[ci], { opacity: 0, duration: 0.8 }, 90.3 + k * 0.5);
+      .to(descCard2, { opacity: 0, y: -20, ease: 'power1.in', duration: 1.8 }, 81);
+
+    /* --- READ PHASE: bar sweeps top → bottom, lighting up each booking as it passes --- */
+    tl.set(scanBar, { opacity: 1, top: '0%', scaleY: 1, filter: 'hue-rotate(0deg)' }, 72.5);
+    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'none', duration: 11 }, 72.5);
+    /* each chip brightens as the reading bar crosses it (chips ordered by vertical position) */
+    const chipsByY = [...calChips].sort(
+      (a, b) => (parseFloat(a.style.top) || 0) - (parseFloat(b.style.top) || 0)
+    );
+    const nChipSpan = Math.max(1, chipsByY.length - 1);
+    chipsByY.forEach((chip, i) => {
+      const at = 73 + (i / nChipSpan) * 9;
+      tl.to(chip, {
+        filter: 'brightness(1.32)',
+        boxShadow: '0 0 12px 1px rgba(13,123,255,0.55)',
+        duration: 0.5, yoyo: true, repeat: 1, ease: 'sine.inOut',
+      }, at);
     });
-    tl.set(calBody, { opacity: 0 }, 93.2);
-    /* rise to the top, then PAUSE (95.4 → 98) before rendering the schedule */
-    tl.to(scanBar, { top: '0%', ease: 'power2.inOut', duration: 2 }, 93.4);
-    tl.to(schedBody, { opacity: 1, duration: 0.3 }, 98);
-    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'none', duration: 6 }, 98);
-    tl.to(schedTop, { opacity: 1, duration: 1 }, 98.4);            /* header appears near the top */
-    tl.to(hoursPanel, { opacity: 1, duration: 1.1 }, 102.4);      /* hours summary appears near the bottom */
-    tl.to(scanBar, { opacity: 0, duration: 0.7 }, 104);           /* leave the day columns blank for now */
+
+    /* --- TURNAROUND: bar holds at the bottom with a glow-swell, chips pulse "got it",
+           then the bar rides back to the top, shifting blue → purple (reading → building) --- */
+    tl.to(scanBar, {
+      scaleY: 2.2,
+      boxShadow: '0 0 26px 5px rgba(13,123,255,0.75), 0 0 60px 12px rgba(13,123,255,0.32)',
+      duration: 0.75, yoyo: true, repeat: 1, ease: 'sine.inOut',
+    }, 83.5);
+    tl.to(calChips, {
+      filter: 'brightness(1.25)',
+      duration: 0.55, yoyo: true, repeat: 1, ease: 'sine.inOut',
+    }, 83.6);
+    tl.to(scanBar, { top: '0%', ease: 'power2.inOut', duration: 3 }, 85);
+    tl.to(scanBar, { filter: 'hue-rotate(42deg)', ease: 'power1.inOut', duration: 3 }, 85);
+
+    /* the finished schedule is prepared *behind* the still-opaque calendar (invisible for now) */
+    tl.set([schedBody, schedTop, hoursPanel], { opacity: 1 }, 87.6);
+
+    /* --- BUILD PHASE: bar sweeps top → bottom again; the calendar is wiped away in its wake,
+           revealing the schedule underneath in one continuous pass (header → body → hours) --- */
+    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'none', duration: 13 }, 88.5);
+    tl.fromTo(calBody,
+      { clipPath: 'inset(0% 0% 0% 0%)' },
+      { clipPath: 'inset(100% 0% 0% 0%)', ease: 'none', duration: 13 }, 88.5);
+    tl.set(calBody, { opacity: 0 }, 101.7);
+    tl.to(scanBar, { opacity: 0, duration: 0.9 }, 101.7);        /* day columns stay blank for now */
 
     /* beat 8 — days pop in left to right */
     cols.forEach((col, i) => {
