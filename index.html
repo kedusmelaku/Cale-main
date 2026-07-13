@@ -104,19 +104,14 @@
         </div>
       </section>
 
-      <!-- ============ ACT 3 — LINE → COPIED RESULT → STAFF APPROVE ============ -->
+      <!-- ============ ACT 3 — LINE → COPIED RESULT → STAFF APPROVE (pinned) ============ -->
       <section class="approvals" id="approvals" aria-label="The finished schedule, pasted to your staff and approved">
+        <div class="approvals-pin" id="approvalsPin">
         <div class="container approvals-inner" id="approvalsInner">
           <svg class="approval-lines" id="approvalLines" viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="lineGrad" gradientUnits="userSpaceOnUse" x1="500" y1="0" x2="500" y2="400">
-                <stop offset="0%" stop-color="#0D7BFF" />
-                <stop offset="100%" stop-color="#9F8FFF" />
-              </linearGradient>
-            </defs>
-            <path class="a-stem" pathLength="1" vector-effect="non-scaling-stroke" fill="none" />
-            <path class="a-wrap a-left" pathLength="1" vector-effect="non-scaling-stroke" fill="none" />
-            <path class="a-wrap a-right" pathLength="1" vector-effect="non-scaling-stroke" fill="none" />
+            <path class="a-stem" vector-effect="non-scaling-stroke" fill="none" />
+            <path class="a-wrap a-left" vector-effect="non-scaling-stroke" fill="none" />
+            <path class="a-wrap a-right" vector-effect="non-scaling-stroke" fill="none" />
           </svg>
 
           <div class="result-msg" id="resultMsg">
@@ -152,6 +147,7 @@ Morgan : 12-2</pre>
           </div>
 
           <div class="people" id="people"><!-- profile icons injected by JS --></div>
+        </div>
         </div>
       </section>
 

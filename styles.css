@@ -444,9 +444,14 @@ body {
   }
   @keyframes pulse-glow { from { opacity: 0.55; } to { opacity: 1; } }
 }
-/* ---------- Act 3 — line wraps the copied result, staff approve ---------- */
-.approvals { padding: 0 0 90px; }
-.approvals-inner { position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 150px; }
+/* ---------- Act 3 — line wraps the copied result, staff approve (pinned) ---------- */
+.approvals { padding: 0; }
+.approvals-pin {
+  min-height: 100vh; min-height: 100svh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.approvals-inner { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; padding-top: 96px; padding-bottom: 30px; }
 .approval-lines {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -456,14 +461,13 @@ body {
 }
 .a-stem, .a-wrap {
   fill: none;
-  stroke: url(#lineGrad);
-  stroke-width: 3;
+  stroke: #9F8FFF;
+  stroke-width: 3.2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 1;
 }
-.a-stem { filter: drop-shadow(0 0 calc(4px + var(--glow, 0) * 9px) rgba(13, 123, 255, 0.6)); }
-.a-wrap { filter: drop-shadow(0 0 calc(5px + var(--glow, 0) * 17px) rgba(159, 143, 255, 0.85)); }
+.a-stem { filter: drop-shadow(0 0 calc(4px + var(--glow, 0) * 10px) rgba(159, 143, 255, 0.8)); }
+.a-wrap { filter: drop-shadow(0 0 calc(6px + var(--glow, 0) * 22px) rgba(159, 143, 255, 0.95)); }
 /* copied-result message bubble */
 .result-msg { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; margin-top: 0; }
 .msg-bubble {
@@ -696,7 +700,7 @@ body {
   .person { width: 60px; }
   .person .avatar { width: 44px; height: 44px; }
   .person .name { font-size: 10.5px; }
-  .approvals-inner { padding-top: 110px; }
+  .approvals-inner { padding-top: 70px; }
   .msg-text { font-size: 11px; }
   .cta-content { padding: 84px 20px; }
 }
@@ -716,6 +720,7 @@ body.no-anim .sched-layer { position: static; display: block; }
 body.no-anim .sched-window { margin: 0 auto; max-width: 886px; }
 body.no-anim .glow-ring { display: none; }
 body.no-anim .approval-lines { display: none; }
+body.no-anim .approvals-pin { min-height: 0; padding: 40px 0; }
 body.no-anim .approvals .thumb { transform: scale(1); }
 body.no-anim .reveal { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {

@@ -407,16 +407,22 @@
     /* settle room so the glowing schedule holds before the pin releases */
     tl.to({}, { duration: 100 - tl.duration() > 0 ? 100 - tl.duration() : 6 });
 
-    /* ---------- Act 3: line wraps the copied result, staff approve ---------- */
+    /* ---------- Act 3: line wraps the copied result, staff approve (pinned) ---------- */
     const svg = $('#approvalLines');
     const stem = $('.a-stem', svg);
     const wraps = $$('.a-wrap', svg);
-    const grad = $('#lineGrad');
     const inner = $('#approvalsInner');
     const bubble = $('#msgBubble');
     const msg = $('#resultMsg');
     const thumbs = $$('.thumb');
     const avatars = $$('.person');
+
+    let stemLen = 0;
+    const wrapLens = [];
+    const stemProg = { v: 0 };
+    const wrapProg = { v: 0 };
+    const applyStem = () => { stem.style.strokeDashoffset = stemLen * (1 - stemProg.v); };
+    const applyWrap = () => { wraps.forEach((p, i) => { p.style.strokeDashoffset = wrapLens[i] * (1 - wrapProg.v); }); };
 
     /* build the stem + two wrapping half-outlines from the measured bubble */
     function layoutApprovals() {
@@ -428,8 +434,6 @@
       const cx = x + w / 2;
       const rTL = 20, rTR = 20, rBR = 20, rBL = 7; /* matches the bubble's border-radius */
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      grad.setAttribute('x1', cx); grad.setAttribute('y1', 0);
-      grad.setAttribute('x2', cx); grad.setAttribute('y2', y + h);
       /* stem: from the top of the section down to the top-center of the bubble */
       stem.setAttribute('d', `M${cx},0 L${cx},${y}`);
       /* right half: top-center, clockwise around to bottom-center */
@@ -438,44 +442,59 @@
       /* left half: top-center, counter-clockwise around to bottom-center */
       $('.a-left', svg).setAttribute('d',
         `M${cx},${y} H${x + rTL} A${rTL},${rTL} 0 0 0 ${x},${y + rTL} V${y + h - rBL} A${rBL},${rBL} 0 0 0 ${x + rBL},${y + h} H${cx}`);
+      /* dash each path to its own length so the draw traces smoothly */
+      stemLen = stem.getTotalLength();
+      stem.style.strokeDasharray = stemLen;
+      wrapLens.length = 0;
+      wraps.forEach((p) => { const L = p.getTotalLength(); wrapLens.push(L); p.style.strokeDasharray = L; });
+      applyStem();
+      applyWrap();
     }
     layoutApprovals();
 
-    gsap.set([stem, ...wraps], { strokeDashoffset: 1 });
     gsap.set(svg, { '--glow': 0 });
     gsap.set(msg, { opacity: 0 });
     gsap.set(avatars, { opacity: 0, scale: 0.4, y: 0 });
     gsap.set(thumbs, { scale: 0 });
 
     const lines = gsap.timeline({
-      scrollTrigger: { trigger: '#approvals', start: 'top 78%', end: 'bottom 42%', scrub: 0.6 },
+      scrollTrigger: {
+        trigger: '#approvalsPin',
+        start: 'top top',
+        end: '+=2000',
+        pin: true,
+        anticipatePin: 1,
+        scrub: 0.6,
+      },
     });
-    /* stem draws down from the schedule */
-    lines.to(stem, { strokeDashoffset: 0, ease: 'none', duration: 4 }, 0);
+    /* stem draws down toward the message */
+    lines.to(stemProg, { v: 1, ease: 'none', duration: 4, onUpdate: applyStem }, 0);
     /* the copied schedule fades in as the stem reaches it */
     lines.to(msg, { opacity: 1, ease: 'power2.out', duration: 2 }, 3);
     /* the line splits and traces both sides of the bubble, glow intensifying */
-    lines.to(wraps, { strokeDashoffset: 0, ease: 'none', duration: 5.5 }, 4.4);
+    lines.to(wrapProg, { v: 1, ease: 'none', duration: 5.5, onUpdate: applyWrap }, 4.4);
     lines.to(svg, { '--glow': 1, ease: 'power1.in', duration: 5.5 }, 4.4);
 
-    /* long beat so the reader catches up to the message before staff react */
     const n = avatars.length;
 
     /* profiles pop in, left → right */
-    const AV_START = 14;
+    const AV_START = 9.5;
     avatars.forEach((a, i) => {
       lines.to(a, { opacity: 1, scale: 1, ease: 'back.out(1.8)', duration: 1.1 }, AV_START + i * 0.6);
     });
 
-    /* thumbs-up wave, right → left: each profile rises as its thumb pops, then settles */
-    const TH_START = 19;
+    /* thumbs-up wave, right → left: each profile rises as its thumb pops, then settles.
+       Sam (leftmost) reacts last, and the pin releases just after. */
+    const TH_START = 14;
     avatars.forEach((a, i) => {
       const order = n - 1 - i;           /* rightmost reacts first */
-      const t = TH_START + order * 0.7;
+      const t = TH_START + order * 0.9;
       lines.to(a, { y: -16, ease: 'power2.out', duration: 0.55 }, t);
-      lines.to(thumbs[i], { scale: 1, ease: 'back.out(2.6)', duration: 0.6 }, t + 0.12);
-      lines.to(a, { y: 0, ease: 'power2.inOut', duration: 0.65 }, t + 0.55);
+      lines.to(thumbs[i], { scale: 1, ease: 'back.out(2.6)', duration: 0.7 }, t + 0.12);
+      lines.to(a, { y: 0, ease: 'power2.inOut', duration: 0.7 }, t + 0.6);
     });
+    /* small settle so the pin doesn't release the instant Sam's thumb lands */
+    lines.to({}, { duration: 1.5 });
 
     ScrollTrigger.refresh();
 
@@ -491,6 +510,16 @@
     (document.fonts?.ready || Promise.resolve()).then(relayout);
     let rz;
     addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(relayout, 180); });
+
+    /* ---------- Act 5: lock the CTA copy in the viewport as it centers ---------- */
+    ScrollTrigger.create({
+      trigger: '.cta-content',
+      start: 'center center',
+      end: '+=420',
+      pin: true,
+      pinSpacing: true,
+      anticipatePin: 1,
+    });
   }
 
   init();
