@@ -480,7 +480,7 @@
 
     /* glass description card over the forms */
     tl.to(descCard, { opacity: 1, y: 0, duration: 2.5 }, 46)
-      .to(descCard, { opacity: 0, y: -20, ease: 'power1.in', duration: 2 }, 58);
+      .to(descCard, { opacity: 0, y: -20, ease: 'power1.in', duration: 2 }, 60.6);
 
     /* beat 6 — brief beat of fully-filled forms, then contents vanish fast */
     tl.to($$('.mini-form-inner'), { opacity: 0, duration: 1.6, stagger: 0.05, ease: 'power1.in' }, 60.5);
