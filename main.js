@@ -235,6 +235,75 @@
     }
   });
 
+  /* ---------------- auto-scroll guided tour ---------------- */
+  (() => {
+    const btn = $('#autoToggle');
+    if (!btn) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { btn.style.display = 'none'; return; }
+
+    const SPEED = 380;                 /* px per second — watchable but not sluggish */
+    let autoOn = false, paused = false, raf = null, lastT = 0, expectedY = -1, resumeTimer = null;
+    const maxScroll = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
+    const isLanding = () => scrollY < innerHeight * 0.6;   /* still on the hero */
+
+    const render = () => {
+      btn.classList.toggle('playing', autoOn);
+      btn.setAttribute('aria-label', autoOn ? 'Pause guided tour' : 'Play guided tour');
+    };
+    function step(t) {
+      if (!autoOn) return;
+      if (!lastT) lastT = t;
+      const dt = Math.min((t - lastT) / 1000, 0.05);
+      lastT = t;
+      const next = Math.min(scrollY + SPEED * dt, maxScroll());
+      scrollTo(0, next);
+      expectedY = Math.round(next);
+      if (next >= maxScroll() - 1) { stop(); return; }   /* reached the end */
+      raf = requestAnimationFrame(step);
+    }
+    function start() {
+      if (autoOn || paused) return;
+      clearTimeout(resumeTimer);
+      autoOn = true; lastT = 0;
+      raf = requestAnimationFrame(step);
+      render();
+    }
+    function stop() {
+      autoOn = false;
+      if (raf) cancelAnimationFrame(raf);
+      raf = null; lastT = 0;
+      render();
+    }
+    function scheduleResume() {
+      clearTimeout(resumeTimer);
+      if (paused || scrollY >= maxScroll() - 2) return;   /* don't resume at the very bottom */
+      resumeTimer = setTimeout(start, isLanding() ? 7000 : 2000);
+    }
+    function userTakeover() {
+      if (autoOn) stop();
+      scheduleResume();
+    }
+
+    /* user intent = real input; auto-scroll's own scrollTo never fires these */
+    addEventListener('wheel', userTakeover, { passive: true });
+    addEventListener('touchmove', userTakeover, { passive: true });
+    addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'].includes(e.key)) userTakeover();
+    });
+    /* catch scrollbar drags / anything that moves scroll away from where we put it */
+    addEventListener('scroll', () => {
+      if (autoOn && expectedY >= 0 && Math.abs(scrollY - expectedY) > 12) userTakeover();
+    }, { passive: true });
+
+    btn.addEventListener('click', () => {
+      if (autoOn) { paused = true; stop(); clearTimeout(resumeTimer); }
+      else { paused = false; clearTimeout(resumeTimer); start(); }
+    });
+
+    render();
+    resumeTimer = setTimeout(start, 7000);   /* the 7s-after-load rule */
+  })();
+
   /* ---------------- animation setup ---------------- */
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduced || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {

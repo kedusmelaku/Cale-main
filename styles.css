@@ -68,6 +68,33 @@ body {
   width: var(--p, 0%);
   border-radius: 0 3px 3px 0;
 }
+/* auto-scroll guided-tour toggle */
+.autoscroll-toggle {
+  position: fixed; bottom: 22px; right: 22px; z-index: 150;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 46px; padding: 0 18px 0 15px;
+  border-radius: 100px;
+  border: 1px solid var(--card-border);
+  background: rgba(255,255,255,0.74);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: 0 10px 30px rgba(13,40,90,0.16);
+  color: var(--ink); cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 600;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s;
+}
+.autoscroll-toggle:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(13,40,90,0.22); }
+.autoscroll-toggle svg { color: var(--blue-deep); }
+.autoscroll-toggle .ic-pause { display: none; }
+.autoscroll-toggle.playing .ic-play { display: none; }
+.autoscroll-toggle.playing .ic-pause { display: block; }
+.autoscroll-toggle .autoscroll-label::after { content: 'Tour'; }
+.autoscroll-toggle.playing .autoscroll-label::after { content: 'Pause'; }
+.autoscroll-label { font-size: 0; }
+.autoscroll-label::after { font-size: 13.5px; }
+@media (max-width: 620px) {
+  .autoscroll-toggle { bottom: 16px; right: 16px; padding: 0 15px 0 13px; height: 42px; }
+}
 /* ---------- Nav ---------- */
 .nav {
   position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
@@ -137,10 +164,17 @@ body {
 @keyframes shimmer { to { background-position: -220% 0; } }
 .hero .lead { font-size: 19.5px; color: var(--muted); max-width: 580px; margin: 0 auto 4px; }
 /* three-step "how it works" strip — builds itself in on load */
+.how-eyebrow {
+  margin-top: 34px;
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--blue);
+  opacity: 0; transform: translateY(10px);
+  animation: howIn 0.7s var(--ease) 0.35s forwards;
+}
 .how-strip {
   display: flex; align-items: flex-start; justify-content: center;
   gap: 14px; flex-wrap: wrap;
-  margin-top: 40px;
+  margin-top: 18px;
 }
 .how-step {
   display: flex; flex-direction: column; align-items: center; gap: 11px;
@@ -797,7 +831,7 @@ body.no-anim .reveal { opacity: 1; transform: none; }
   .blob, .glow-ring::before, .trio-card.in { animation: none !important; }
   .flow-bg::before, .flow-bg::after { animation: none !important; }
   .stage.vibrate .bubble .bubble-inner { animation: none !important; }
-  .how-step, .how-arrow { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .how-eyebrow, .how-step, .how-arrow { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 a:focus-visible, button:focus-visible, input:focus-visible {
   outline: 2px solid var(--blue);
