@@ -88,7 +88,7 @@ body {
 .autoscroll-toggle .ic-pause { display: none; }
 .autoscroll-toggle.playing .ic-play { display: none; }
 .autoscroll-toggle.playing .ic-pause { display: block; }
-.autoscroll-toggle .autoscroll-label::after { content: 'Play'; }
+.autoscroll-toggle .autoscroll-label::after { content: 'Tour'; }
 .autoscroll-toggle.playing .autoscroll-label::after { content: 'Pause'; }
 .autoscroll-label { font-size: 0; }
 .autoscroll-label::after { font-size: 13.5px; }
@@ -240,6 +240,7 @@ body {
   padding: 4px 14px; border-radius: 7px;
 }
 /* ---------- Schedule mock (shared by hero + story) ---------- */
+.body-wrap { position: relative; }
 .sched-body { padding: 18px; background: var(--app-bg); }
 .sched-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 12px; }
 .sched-top-left { display: flex; align-items: center; gap: 12px; }
@@ -311,6 +312,46 @@ body {
 .hours-row .dot.o { background: var(--p-orange); }
 .hours-row .dot.r { background: var(--p-red); }
 .hours-row .val { font-weight: 700; color: var(--app-text); font-variant-numeric: tabular-nums; }
+/* ---------- booking calendar overlay (GCal-style, no branding) ---------- */
+.cal-body {
+  position: absolute; inset: 0;
+  background: var(--app-panel);
+  padding: 14px 16px 16px;
+  display: grid; grid-template-columns: 40px 1fr;
+  gap: 8px;
+}
+.cal-gutter { display: flex; flex-direction: column; justify-content: space-between; padding: 26px 0 8px; }
+.cal-gutter span { font-size: 8.5px; color: var(--app-muted); line-height: 1; text-align: right; padding-right: 4px; }
+.cal-cols { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.cal-col { display: flex; flex-direction: column; }
+.cal-day {
+  text-align: center; font-size: 10.5px; color: var(--app-muted);
+  padding-bottom: 6px; font-weight: 600;
+  border-bottom: 1px solid var(--app-border);
+}
+.cal-day b { color: var(--app-text); font-family: 'Sora'; font-weight: 700; margin-left: 3px; }
+.cal-lane { position: relative; flex: 1; margin-top: 6px; border-left: 1px solid var(--app-border); }
+.cal-lane .gridline { position: absolute; left: 0; right: 0; height: 1px; background: rgba(16,32,64,0.05); }
+.cal-chip {
+  position: absolute; left: 4%; right: 4%;
+  border-radius: 5px; padding: 4px 5px;
+  overflow: hidden;
+  border-left: 3px solid;
+  display: flex; align-items: flex-start;
+}
+.cal-chip span { font-size: 8px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; }
+.cal-chip.c1 { background: rgba(13,123,255,0.16); border-color: var(--blue); color: var(--blue-deep); }
+.cal-chip.c2 { background: rgba(71,168,120,0.18); border-color: var(--p-green); color: #2b7a52; }
+.cal-chip.c3 { background: rgba(159,143,255,0.20); border-color: var(--purple-deep); color: #6a58c4; }
+/* scan bar that reads the calendar, then wipes into the schedule */
+.scan-bar {
+  position: absolute; left: 0; top: 0;
+  width: 100%; height: 3px;
+  z-index: 5; opacity: 0; pointer-events: none;
+  transform-origin: 50% 50%;
+  background: linear-gradient(90deg, transparent, var(--blue) 12%, #6ea8ff 50%, var(--blue) 88%, transparent);
+  box-shadow: 0 0 16px 3px rgba(13,123,255,0.6), 0 0 40px 8px rgba(13,123,255,0.25);
+}
 /* ---------- Act 2 — pinned stage ---------- */
 #story { position: relative; }
 .story-head { max-width: 620px; margin: 0 auto; padding: 96px 28px 34px; text-align: center; }
@@ -359,7 +400,8 @@ body {
 .sched-layer  { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; }
 .sched-window { width: 886px; will-change: transform, opacity; }
 .chaos-layer  { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
-.desc-layer   { position: absolute; inset: 0; z-index: 4; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+.desc-layer   { position: absolute; inset: 0; z-index: 4; pointer-events: none; display: grid; place-items: center; }
+.desc-layer .desc-card { grid-area: 1 / 1; }
 /* chat bubbles */
 .bubble {
   position: absolute; left: 50%; top: 50%;
@@ -822,6 +864,7 @@ body.no-anim .desc-card { margin: 0 auto; opacity: 1 !important; transform: none
 body.no-anim .sched-layer { position: static; display: block; }
 body.no-anim .sched-window { margin: 0 auto; max-width: 886px; }
 body.no-anim .glow-ring { display: none; }
+body.no-anim .cal-body, body.no-anim .scan-bar { display: none; }
 body.no-anim .approval-lines { display: none; }
 body.no-anim .approvals-pin { min-height: 0; padding: 40px 0; }
 body.no-anim .approvals .thumb { transform: scale(1); }

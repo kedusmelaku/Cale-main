@@ -37,6 +37,8 @@
     'check the group chat', 'schedule_v3_FINAL_final.xlsx ???', 'I sent mine last week...',
     'did Casey reply yet?', "I can cover if it's before 5", 'someone claim Saturday plz',
     'I only saw this now, sorry!!', 'screenshot it to me?',
+    'we had 3 instructors for 2 kids??', '4pm was slammed, we needed one more',
+    'why were we double staffed tuesday?',
   ];
   const POP_MSGS = ['??', 'hello??', 'bump', 'any update?', '@everyone', 'schedule??', '!!', 'pls respond', '😭', 'is it out yet?'];
   const STAFF = [
@@ -76,18 +78,41 @@
         <span class="who"><span class="dot ${h.c}"></span>${h.n}</span>
         <span class="val" data-hours="${h.v}">${fmtHours(h.v)}</span>
       </div>`).join('');
+    /* week-view booking calendar (GCal-style, no branding) shown before the schedule */
+    const BOOKINGS = [
+      [{ t: 6, h: 15, c: 1, l: '3:30' }, { t: 30, h: 13, c: 2, l: '4:30' }, { t: 58, h: 16, c: 1, l: '6:00' }],
+      [{ t: 4, h: 13, c: 2, l: '3:00' }, { t: 22, h: 15, c: 1, l: '4:00' }, { t: 46, h: 13, c: 3, l: '5:30' }, { t: 70, h: 14, c: 1, l: '7:00' }],
+      [{ t: 12, h: 15, c: 3, l: '3:30' }, { t: 52, h: 16, c: 1, l: '5:30' }],
+      [{ t: 6, h: 13, c: 1, l: '3:00' }, { t: 34, h: 15, c: 2, l: '4:30' }, { t: 62, h: 13, c: 3, l: '6:30' }],
+      [{ t: 8, h: 16, c: 2, l: '10:30' }, { t: 36, h: 14, c: 1, l: '11:30' }, { t: 64, h: 15, c: 3, l: '12:30' }],
+    ];
+    const calCols = SCHED.map((c, i) => `
+      <div class="cal-col">
+        <div class="cal-day">${c.d} <b>${c.dt.split('/')[1]}</b></div>
+        <div class="cal-lane">
+          ${[20, 40, 60, 80].map((t) => `<div class="gridline" style="top:${t}%"></div>`).join('')}
+          ${BOOKINGS[i].map((b) => `<div class="cal-chip c${b.c}" style="top:${b.t}%;height:${b.h}%"><span>Session · ${b.l}</span></div>`).join('')}
+        </div>
+      </div>`).join('');
     return `
       <div class="window-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">usecale.vercel.app</span></div>
-      <div class="sched-body">
-        <div class="sched-top">
-          <div class="sched-top-left"><span class="sched-h">Schedule</span><span class="pill-connected">Connected</span></div>
-          <div class="sched-top-right"><span class="mini-btn outline">Copy to Clipboard</span><span class="mini-btn blue">Generate Schedule</span></div>
+      <div class="body-wrap">
+        <div class="sched-body">
+          <div class="sched-top">
+            <div class="sched-top-left"><span class="sched-h">Schedule</span><span class="pill-connected">Connected</span></div>
+            <div class="sched-top-right"><span class="mini-btn outline">Copy to Clipboard</span><span class="mini-btn blue">Generate Schedule</span></div>
+          </div>
+          <div class="cols">${cols}</div>
+          <div class="hours-panel">
+            <h4>Hours This Week</h4>
+            ${hours}
+          </div>
         </div>
-        <div class="cols">${cols}</div>
-        <div class="hours-panel">
-          <h4>Hours This Week</h4>
-          ${hours}
+        <div class="cal-body">
+          <div class="cal-gutter">${['3 PM','4 PM','5 PM','6 PM','7 PM'].map((t) => `<span>${t}</span>`).join('')}</div>
+          <div class="cal-cols">${calCols}</div>
         </div>
+        <div class="scan-bar"></div>
       </div>`;
   }
 
@@ -331,6 +356,15 @@
     const blocks = [];
     cols.forEach((c) => $$('.blk', c).forEach((b) => blocks.push(b)));
     const hourEls = $$('.val[data-hours]', schedWin);
+    const descCard2 = $('#descCard2');
+    const schedBody = $('.sched-body', schedWin);
+    const schedTop = $('.sched-top', schedWin);
+    const hoursPanel = $('.hours-panel', schedWin);
+    const calBody = $('.cal-body', schedWin);
+    const calCols = $$('.cal-col', schedWin);
+    const calChips = $$('.cal-chip', schedWin);
+    const calGutter = $('.cal-gutter', schedWin);
+    const scanBar = $('.scan-bar', schedWin);
 
     /* line A — hangs from under the schedule down past the screen edge */
     const stagePin = $('#stagePin');
@@ -371,7 +405,14 @@
     pops.forEach((el) => gsap.set(el, { x: el._end.x, y: el._end.y, rotation: el._end.r }));
     gsap.set(genBtn, { x: 0, y: 0, xPercent: -50, yPercent: -50, scale: 0, opacity: 0 });
     gsap.set(descCard, { opacity: 0, y: 28 });
+    gsap.set(descCard2, { opacity: 0, y: 28 });
     gsap.set(schedWin, { opacity: 0 });
+    gsap.set(schedBody, { opacity: 0 });
+    gsap.set(schedTop, { opacity: 0 });
+    gsap.set(hoursPanel, { opacity: 0 });
+    gsap.set(calBody, { opacity: 1, backgroundColor: '#FFFFFF' });
+    gsap.set(calChips, { opacity: 0, scale: 0.6, transformOrigin: '50% 0%' });
+    gsap.set(scanBar, { opacity: 0, top: '0%', scaleX: 1 });
     gsap.set(cols, { opacity: 0, y: 14, scale: 0.95 });
     gsap.set(blocks, { scaleY: 0 });
     cards.forEach((card) => {
@@ -386,15 +427,15 @@
       scrollTrigger: {
         trigger: '#stagePin',
         start: 'top top',
-        end: '+=7200',
+        end: '+=9200',
         scrub: 0.6,
         pin: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate(self) {
           const p = self.progress;
-          stage.classList.toggle('vibrate', p > 0.10 && p < 0.38);
-          ring.classList.toggle('on', p > 0.875);
+          stage.classList.toggle('vibrate', p > 0.09 && p < 0.27);
+          ring.classList.toggle('on', p > 0.815);
         },
       },
     });
@@ -460,14 +501,41 @@
     tl.to(schedWin, { opacity: 1, duration: 2.5 }, 65.2);
     tl.to(cards, { opacity: 0, duration: 1.6 }, 66.8);
 
+    /* ===== NEW ACT — the window opens as a booking CALENDAR, which Cale reads ===== */
+    /* student bookings pop into the week */
+    tl.to(calChips, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1.2, stagger: 0.12 }, 67.5);
+    /* the "Cale reads your bookings" card, shown while the scan runs */
+    tl.to(descCard2, { opacity: 1, y: 0, duration: 2 }, 71)
+      .to(descCard2, { opacity: 0, y: -20, ease: 'power1.in', duration: 1.6 }, 77.6);
+    /* the scan bar reads the calendar top → bottom */
+    tl.set(scanBar, { opacity: 1 }, 72.5);
+    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'power1.inOut', duration: 5 }, 72.5);
+    /* it returns to the middle, collapses to a point, then expands outward — erasing the calendar */
+    tl.to(scanBar, { top: '50%', ease: 'power2.inOut', duration: 1.2 }, 77.5);
+    tl.to(scanBar, { scaleX: 0, ease: 'power2.in', duration: 1.0 }, 78.9);
+    tl.set(calBody, { backgroundColor: 'rgba(255,255,255,0)' }, 79.9);
+    tl.to(scanBar, { scaleX: 1, ease: 'power2.out', duration: 2.6 }, 79.9);
+    tl.to(calGutter, { opacity: 0, duration: 0.7 }, 79.9);
+    [2, 1, 3, 0, 4].forEach((ci, k) => {   /* calendar columns vanish as the expanding ends reach them */
+      tl.to(calCols[ci], { opacity: 0, duration: 0.7 }, 80.1 + k * 0.42);
+    });
+    tl.set(calBody, { opacity: 0 }, 82.6);
+    /* the full-width bar rises to the top, then swipes down building the schedule shell */
+    tl.to(scanBar, { top: '0%', ease: 'power2.inOut', duration: 1.4 }, 82.8);
+    tl.to(schedBody, { opacity: 1, duration: 0.3 }, 84.2);
+    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'power1.inOut', duration: 4.6 }, 84.2);
+    tl.to(schedTop, { opacity: 1, duration: 0.8 }, 84.4);          /* header appears near the top */
+    tl.to(hoursPanel, { opacity: 1, duration: 0.9 }, 87.6);        /* hours summary appears near the bottom */
+    tl.to(scanBar, { opacity: 0, duration: 0.6 }, 88.8);           /* leave the day columns blank for now */
+
     /* beat 8 — days pop in left to right */
     cols.forEach((col, i) => {
-      tl.to(col, { opacity: 1, y: 0, scale: 1, ease: 'back.out(1.6)', duration: 1.6 }, 69 + i * 1.05);
+      tl.to(col, { opacity: 1, y: 0, scale: 1, ease: 'back.out(1.6)', duration: 1.6 }, 90 + i * 1.05);
     });
 
     /* beat 9 — worker blocks rise from the bottom of each day,
        first the most dramatic, each one after faster than the last */
-    let t = 74;
+    let t = 95;
     let dur = 3.2;
     blocks.forEach((b) => {
       tl.to(b, { scaleY: 1, ease: 'power3.out', duration: dur }, t);
@@ -490,20 +558,20 @@
           el.textContent = fmtHours(v);
         });
       },
-    }, 74);
+    }, 95);
 
     /* beat 10 — the finished schedule pops, then the revolving glow takes over (via onUpdate class) */
-    tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 85.5)
-      .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 86.9);
+    tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 106.5)
+      .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 107.9);
 
     /* line A grows downward out of the schedule, then the schedule + line travel
        upward together — so scrolling feels like descending the line toward the message */
     layoutStemDown();
-    tl.to(stemDownProg, { v: 1, ease: 'none', duration: 4, onUpdate: applyStemDown }, 87);
-    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'none', duration: 11 }, 89);
+    tl.to(stemDownProg, { v: 1, ease: 'none', duration: 4, onUpdate: applyStemDown }, 108);
+    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'none', duration: 11 }, 110);
 
     /* settle room so the glowing schedule holds before the pin releases */
-    tl.to({}, { duration: 100 - tl.duration() > 0 ? 100 - tl.duration() : 6 });
+    tl.to({}, { duration: Math.max(4, 132 - tl.duration()) });
 
     /* ---------- Act 3: line wraps the copied result, staff approve (pinned) ---------- */
     const svg = $('#approvalLines');
