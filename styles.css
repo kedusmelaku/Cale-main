@@ -88,7 +88,7 @@ body {
 .autoscroll-toggle .ic-pause { display: none; }
 .autoscroll-toggle.playing .ic-play { display: none; }
 .autoscroll-toggle.playing .ic-pause { display: block; }
-.autoscroll-toggle .autoscroll-label::after { content: 'Tour'; }
+.autoscroll-toggle .autoscroll-label::after { content: 'Play'; }
 .autoscroll-toggle.playing .autoscroll-label::after { content: 'Pause'; }
 .autoscroll-label { font-size: 0; }
 .autoscroll-label::after { font-size: 13.5px; }
