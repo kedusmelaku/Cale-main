@@ -29,7 +29,7 @@
   ];
   const SIDE_MSGS = [
     'can you work thursday?', "wait, who's closing Friday?", 'resending the spreadsheet...',
-    'I never got the schedule 😅', 'actually I can only do 4–8', 'is this the newest version??',
+    'I never got the schedule 😩', 'actually I can only do 4–8', 'is this the newest version??',
     'anyone free Saturday morning?', "I have a test tmrw, can't come", 'did you get my hours?',
     "the file won't open on my phone", 'can I swap with Jordan?', "I'm out next Tuesday",
     'wait, when do I work?', "who's on with me Monday?", 'I thought I was off??',
@@ -374,6 +374,16 @@
     let stemDownLen = 0;
     const stemDownProg = { v: 0 };
     const applyStemDown = () => { stemDown.style.strokeDashoffset = stemDownLen * (1 - stemDownProg.v); };
+    /* a brighter dashed pulse that streams DOWN line A — gives the line real, perceptible
+       motion (a plain vertical line translating vertically reads as static otherwise) */
+    const stemPulse = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    stemPulse.setAttribute('class', 'a-stem-down-pulse');
+    stemPulse.setAttribute('vector-effect', 'non-scaling-stroke');
+    stemPulse.setAttribute('fill', 'none');
+    gsap.set(stemPulse, { opacity: 0 });
+    stemDownSvg.appendChild(stemPulse);
+    /* continuous flow, independent of scroll, so the line stays alive even while it's still */
+    gsap.to(stemPulse, { strokeDashoffset: -37, duration: 0.85, ease: 'none', repeat: -1 });
     function layoutStemDown() {
       const pr = stagePin.getBoundingClientRect();
       const sr = schedWin.getBoundingClientRect();
@@ -383,6 +393,7 @@
       stemDownSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       /* draw well past the bottom so the line still fills the screen while it travels up */
       stemDown.setAttribute('d', `M${cx},${startY} L${cx},${H * 1.7}`);
+      stemPulse.setAttribute('d', `M${cx},${startY} L${cx},${H * 1.7}`);
       stemDownLen = stemDown.getTotalLength();
       stemDown.style.strokeDasharray = stemDownLen;
       applyStemDown();
@@ -427,15 +438,15 @@
       scrollTrigger: {
         trigger: '#stagePin',
         start: 'top top',
-        end: '+=10080',
+        end: '+=9360',
         scrub: 0.6,
         pin: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate(self) {
           const p = self.progress;
-          stage.classList.toggle('vibrate', p > 0.08 && p < 0.24);
-          ring.classList.toggle('on', p > 0.80);
+          stage.classList.toggle('vibrate', p > 0.09 && p < 0.25);
+          ring.classList.toggle('on', p > 0.86);
         },
       },
     });
@@ -593,11 +604,12 @@
     /* line A grows downward out of the schedule, then the schedule + line travel
        upward together — so scrolling feels like descending the line toward the message */
     layoutStemDown();
-    tl.to(stemDownProg, { v: 1, ease: 'none', duration: 4, onUpdate: applyStemDown }, 114);
-    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'none', duration: 11 }, 116);
+    tl.to(stemDownProg, { v: 1, ease: 'power2.out', duration: 3, onUpdate: applyStemDown }, 114);
+    tl.to(stemPulse, { opacity: 1, ease: 'power1.out', duration: 2 }, 116);
+    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'power1.in', duration: 8 }, 116);
 
     /* settle room so the glowing schedule holds before the pin releases */
-    tl.to({}, { duration: Math.max(4, 140 - tl.duration()) });
+    tl.to({}, { duration: Math.max(4, 130 - tl.duration()) });
 
     /* ---------- Act 3: line wraps the copied result, staff approve (pinned) ---------- */
     const svg = $('#approvalLines');

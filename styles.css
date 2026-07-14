@@ -397,6 +397,14 @@ body {
   stroke-linecap: round;
   filter: drop-shadow(0 0 9px rgba(159, 143, 255, 0.85));
 }
+.a-stem-down-pulse {
+  fill: none;
+  stroke: #ECE6FF;
+  stroke-width: 3.6;
+  stroke-linecap: round;
+  stroke-dasharray: 7 30;
+  filter: drop-shadow(0 0 8px rgba(210, 198, 255, 0.95));
+}
 .forms-layer  { position: absolute; inset: 0; z-index: 1; }
 .sched-layer  { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; }
 .sched-window { width: 886px; will-change: transform, opacity; }
