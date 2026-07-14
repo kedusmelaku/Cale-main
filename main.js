@@ -408,8 +408,8 @@
     gsap.set(descCard2, { opacity: 0, y: 28 });
     gsap.set(schedWin, { opacity: 0 });
     gsap.set(schedBody, { opacity: 0 });
-    gsap.set(schedTop, { opacity: 0 });
-    gsap.set(hoursPanel, { opacity: 0 });
+    gsap.set(schedTop, { opacity: 0, scale: 0.92, transformOrigin: '50% 50%' });
+    gsap.set(hoursPanel, { opacity: 0, scale: 0.92, transformOrigin: '50% 50%' });
     gsap.set(calBody, { opacity: 1, backgroundColor: '#FFFFFF', clipPath: 'inset(0% 0% 0% 0%)' });
     gsap.set(calChips, { opacity: 0, scale: 0.6, transformOrigin: '50% 0%' });
     gsap.set(scanBar, { opacity: 0, top: '0%', scaleX: 1 });
@@ -427,7 +427,7 @@
       scrollTrigger: {
         trigger: '#stagePin',
         start: 'top top',
-        end: '+=10800',
+        end: '+=10080',
         scrub: 0.6,
         pin: true,
         anticipatePin: 1,
@@ -511,7 +511,8 @@
     /* --- READ PHASE: bar sweeps top → bottom, lighting up each booking as it passes --- */
     tl.set(scanBar, { opacity: 1, top: '0%', scaleY: 1, filter: 'hue-rotate(0deg)' }, 72.5);
     tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'none', duration: 11 }, 72.5);
-    /* each chip brightens as the reading bar crosses it (chips ordered by vertical position) */
+    /* each chip hovers up and switches on a steady glow as the reading bar reaches it,
+       and stays lit for the rest of the read (chips ordered by vertical position) */
     const chipsByY = [...calChips].sort(
       (a, b) => (parseFloat(a.style.top) || 0) - (parseFloat(b.style.top) || 0)
     );
@@ -519,46 +520,48 @@
     chipsByY.forEach((chip, i) => {
       const at = 73 + (i / nChipSpan) * 9;
       tl.to(chip, {
-        filter: 'brightness(1.32)',
-        boxShadow: '0 0 12px 1px rgba(13,123,255,0.55)',
-        duration: 0.5, yoyo: true, repeat: 1, ease: 'sine.inOut',
+        y: -5,
+        filter: 'brightness(1.12)',
+        boxShadow: '0 0 12px 1px rgba(13,123,255,0.5)',
+        ease: 'power2.out',
+        duration: 0.9,
       }, at);
     });
 
-    /* --- TURNAROUND: bar holds at the bottom with a glow-swell, chips pulse "got it",
+    /* --- TURNAROUND: bar holds at the bottom with a glow-swell (all chips now lit),
            then the bar rides back to the top, shifting blue → purple (reading → building) --- */
     tl.to(scanBar, {
       scaleY: 2.2,
       boxShadow: '0 0 26px 5px rgba(13,123,255,0.75), 0 0 60px 12px rgba(13,123,255,0.32)',
       duration: 0.75, yoyo: true, repeat: 1, ease: 'sine.inOut',
     }, 83.5);
-    tl.to(calChips, {
-      filter: 'brightness(1.25)',
-      duration: 0.55, yoyo: true, repeat: 1, ease: 'sine.inOut',
-    }, 83.6);
     tl.to(scanBar, { top: '0%', ease: 'power2.inOut', duration: 3 }, 85);
     tl.to(scanBar, { filter: 'hue-rotate(42deg)', ease: 'power1.inOut', duration: 3 }, 85);
 
-    /* the finished schedule is prepared *behind* the still-opaque calendar (invisible for now) */
-    tl.set([schedBody, schedTop, hoursPanel], { opacity: 1 }, 87.6);
+    /* the schedule body sits (empty) behind the still-opaque calendar; its background is
+       uncovered by the wipe, and its pieces POP in as the bar sweeps past their position */
+    tl.set(schedBody, { opacity: 1 }, 87.6);
 
-    /* --- BUILD PHASE: bar sweeps top → bottom again; the calendar is wiped away in its wake,
-           revealing the schedule underneath in one continuous pass (header → body → hours) --- */
-    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'none', duration: 13 }, 88.5);
+    /* --- BUILD PHASE: bar sweeps down FAST — a quick transition, not a slow reveal —
+           wiping the calendar away in its wake; schedule pieces pop in as it passes --- */
+    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'power2.inOut', duration: 4 }, 88.5);
     tl.fromTo(calBody,
       { clipPath: 'inset(0% 0% 0% 0%)' },
-      { clipPath: 'inset(100% 0% 0% 0%)', ease: 'none', duration: 13 }, 88.5);
-    tl.set(calBody, { opacity: 0 }, 101.7);
-    tl.to(scanBar, { opacity: 0, duration: 0.9 }, 101.7);        /* day columns stay blank for now */
+      { clipPath: 'inset(100% 0% 0% 0%)', ease: 'power2.inOut', duration: 4 }, 88.5);
+    /* pieces pop in right as the bar clears their row */
+    tl.to(schedTop, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1 }, 89.3);
+    tl.to(hoursPanel, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1 }, 91.6);
+    tl.set(calBody, { opacity: 0 }, 92.6);
+    tl.to(scanBar, { opacity: 0, duration: 0.8 }, 92.6);        /* day columns stay blank for now */
 
     /* beat 8 — days pop in left to right */
     cols.forEach((col, i) => {
-      tl.to(col, { opacity: 1, y: 0, scale: 1, ease: 'back.out(1.6)', duration: 1.6 }, 105.5 + i * 1.05);
+      tl.to(col, { opacity: 1, y: 0, scale: 1, ease: 'back.out(1.6)', duration: 1.6 }, 95.5 + i * 1.05);
     });
 
     /* beat 9 — worker blocks rise from the bottom of each day,
        first the most dramatic, each one after faster than the last */
-    let t = 111;
+    let t = 101;
     let dur = 3.2;
     blocks.forEach((b) => {
       tl.to(b, { scaleY: 1, ease: 'power3.out', duration: dur }, t);
@@ -581,20 +584,20 @@
           el.textContent = fmtHours(v);
         });
       },
-    }, 111);
+    }, 101);
 
     /* beat 10 — the finished schedule pops, then the revolving glow takes over (via onUpdate class) */
-    tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 122)
-      .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 123.4);
+    tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 112)
+      .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 113.4);
 
     /* line A grows downward out of the schedule, then the schedule + line travel
        upward together — so scrolling feels like descending the line toward the message */
     layoutStemDown();
-    tl.to(stemDownProg, { v: 1, ease: 'none', duration: 4, onUpdate: applyStemDown }, 124);
-    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'none', duration: 11 }, 126);
+    tl.to(stemDownProg, { v: 1, ease: 'none', duration: 4, onUpdate: applyStemDown }, 114);
+    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'none', duration: 11 }, 116);
 
     /* settle room so the glowing schedule holds before the pin releases */
-    tl.to({}, { duration: Math.max(4, 150 - tl.duration()) });
+    tl.to({}, { duration: Math.max(4, 140 - tl.duration()) });
 
     /* ---------- Act 3: line wraps the copied result, staff approve (pinned) ---------- */
     const svg = $('#approvalLines');
