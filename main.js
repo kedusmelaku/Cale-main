@@ -29,7 +29,7 @@
   ];
   const SIDE_MSGS = [
     'can you work thursday?', "wait, who's closing Friday?", 'resending the spreadsheet...',
-    'I never got the schedule 😩', 'actually I can only do 4–8', 'is this the newest version??',
+    'I never got the schedule 😅', 'actually I can only do 4–8', 'is this the newest version??',
     'anyone free Saturday morning?', "I have a test tmrw, can't come", 'did you get my hours?',
     "the file won't open on my phone", 'can I swap with Jordan?', "I'm out next Tuesday",
     'wait, when do I work?', "who's on with me Monday?", 'I thought I was off??',
