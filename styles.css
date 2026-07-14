@@ -88,7 +88,7 @@ body {
 .autoscroll-toggle .ic-pause { display: none; }
 .autoscroll-toggle.playing .ic-play { display: none; }
 .autoscroll-toggle.playing .ic-pause { display: block; }
-.autoscroll-toggle .autoscroll-label::after { content: 'Tour'; }
+.autoscroll-toggle .autoscroll-label::after { content: 'Play'; }
 .autoscroll-toggle.playing .autoscroll-label::after { content: 'Pause'; }
 .autoscroll-label { font-size: 0; }
 .autoscroll-label::after { font-size: 13.5px; }
@@ -124,11 +124,19 @@ body {
 .nav-links a:hover { color: var(--ink); }
 .nav-cta {
   padding: 9px 17px; border-radius: 11px;
-  background: var(--ink); color: #fff !important;
+  background: linear-gradient(270deg, #0D7BFF, #6E77E8, #9F8FFF, #C3B9FF, #0D7BFF);
+  background-size: 300% 300%;
+  color: #fff !important;
   font-weight: 600 !important; font-size: 14px !important;
   transition: transform 0.25s var(--ease), box-shadow 0.25s;
+  animation: ctaFlow 7s ease infinite;
 }
-.nav-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(11,21,38,0.25); }
+@keyframes ctaFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.nav-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(13,123,255,0.4); }
 .nav-toggle { display: none; background: none; border: 0; color: var(--ink); cursor: pointer; }
 /* ---------- Hero (Act 1 — pinned) ---------- */
 .hero { height: 100vh; height: 100svh; position: relative; overflow: hidden; }
@@ -880,7 +888,7 @@ body.no-anim .approvals .thumb { transform: scale(1); }
 body.no-anim .reveal { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .field::before, .field::after, .shimmer, .scroll-hint,
-  .blob, .glow-ring::before, .trio-card.in { animation: none !important; }
+  .blob, .glow-ring::before, .trio-card.in, .nav-cta { animation: none !important; }
   .flow-bg::before, .flow-bg::after { animation: none !important; }
   .stage.vibrate .bubble .bubble-inner { animation: none !important; }
   .how-eyebrow, .how-step, .how-arrow { animation: none !important; opacity: 1 !important; transform: none !important; }
