@@ -391,9 +391,10 @@
       const cx = (sr.left + sr.right) / 2 - pr.left;
       const startY = (sr.top - pr.top) + sr.height * 0.5; /* start mid-schedule so it sits under it */
       stemDownSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      /* draw well past the bottom so the line still fills the screen while it travels up */
-      stemDown.setAttribute('d', `M${cx},${startY} L${cx},${H * 1.7}`);
-      stemPulse.setAttribute('d', `M${cx},${startY} L${cx},${H * 1.7}`);
+      /* draw well past the bottom so the line fills the whole screen (and exits the bottom
+         edge) after it travels up — no blank gap where it hands off to line B */
+      stemDown.setAttribute('d', `M${cx},${startY} L${cx},${H * 2.0}`);
+      stemPulse.setAttribute('d', `M${cx},${startY} L${cx},${H * 2.0}`);
       stemDownLen = stemDown.getTotalLength();
       stemDown.style.strokeDasharray = stemDownLen;
       applyStemDown();
@@ -623,10 +624,18 @@
 
     let stemLen = 0;
     const wrapLens = [];
-    const stemProg = { v: 0 };
+    const stemProg = { v: 1 };   /* line B stem is PRE-DRAWN so it reads as one continuous line handed off from line A (no redraw) */
     const wrapProg = { v: 0 };
     const applyStem = () => { stem.style.strokeDashoffset = stemLen * (1 - stemProg.v); };
     const applyWrap = () => { wraps.forEach((p, i) => { p.style.strokeDashoffset = wrapLens[i] * (1 - wrapProg.v); }); };
+    /* a pulse that flows down line B too, continuing the stream from line A into the message */
+    const stemPulseB = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    stemPulseB.setAttribute('class', 'a-stem-down-pulse');
+    stemPulseB.setAttribute('vector-effect', 'non-scaling-stroke');
+    stemPulseB.setAttribute('fill', 'none');
+    gsap.set(stemPulseB, { opacity: 0 });
+    svg.appendChild(stemPulseB);
+    gsap.to(stemPulseB, { strokeDashoffset: -37, duration: 0.85, ease: 'none', repeat: -1 });
 
     /* build the stem (from the top of the viewport) + two wrapping half-outlines around the bubble */
     function layoutApprovals() {
@@ -641,6 +650,7 @@
       /* stem: from the very top of the pinned viewport down to the top-center of the bubble
          (this is line B — it meets line A hanging from the schedule above) */
       stem.setAttribute('d', `M${cx},0 L${cx},${y}`);
+      stemPulseB.setAttribute('d', `M${cx},0 L${cx},${y}`);
       /* right half: top-center, clockwise around to bottom-center */
       $('.a-right', svg).setAttribute('d',
         `M${cx},${y} H${x + w - rTR} A${rTR},${rTR} 0 0 1 ${x + w},${y + rTR} V${y + h - rBR} A${rBR},${rBR} 0 0 1 ${x + w - rBR},${y + h} H${cx}`);
@@ -672,10 +682,10 @@
         scrub: 0.6,
       },
     });
-    /* stem draws down toward the message */
-    lines.to(stemProg, { v: 1, ease: 'none', duration: 4, onUpdate: applyStem }, 0);
-    /* the copied schedule fades in as the stem reaches it */
-    lines.to(msg, { opacity: 1, ease: 'power2.out', duration: 2 }, 3);
+    /* line B is already drawn (in layout) — the vertical line simply continues from Act 2.
+       Its pulse fades in to keep the downward flow going, and the message appears right away. */
+    lines.to(stemPulseB, { opacity: 1, ease: 'power1.out', duration: 1.5 }, 0);
+    lines.to(msg, { opacity: 1, ease: 'power2.out', duration: 2 }, 0.5);
     /* the line splits and traces both sides of the bubble, glow intensifying */
     lines.to(wrapProg, { v: 1, ease: 'none', duration: 5.5, onUpdate: applyWrap }, 4.4);
     lines.to(svg, { '--glow': 1, ease: 'power1.in', duration: 5.5 }, 4.4);
