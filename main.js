@@ -439,15 +439,15 @@
       scrollTrigger: {
         trigger: '#stagePin',
         start: 'top top',
-        end: '+=9360',
+        end: '+=8784',
         scrub: 0.6,
         pin: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate(self) {
           const p = self.progress;
-          stage.classList.toggle('vibrate', p > 0.09 && p < 0.25);
-          ring.classList.toggle('on', p > 0.86);
+          stage.classList.toggle('vibrate', p > 0.096 && p < 0.266);
+          ring.classList.toggle('on', p > 0.918);
         },
       },
     });
@@ -602,15 +602,15 @@
     tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 112)
       .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 113.4);
 
-    /* line A grows downward out of the schedule, then the schedule + line travel
-       upward together — so scrolling feels like descending the line toward the message */
+    /* line A grows downward out of the schedule and the travel STARTS WHILE IT'S STILL DRAWING —
+       overlapping (not sequencing) these keeps the momentum from the schedule pop rolling */
     layoutStemDown();
-    tl.to(stemDownProg, { v: 1, ease: 'power2.out', duration: 3, onUpdate: applyStemDown }, 114);
-    tl.to(stemPulse, { opacity: 1, ease: 'power1.out', duration: 2 }, 116);
-    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'power1.in', duration: 8 }, 116);
+    tl.to(stemDownProg, { v: 1, ease: 'power2.out', duration: 2, onUpdate: applyStemDown }, 113.5);
+    tl.to(stemPulse, { opacity: 1, ease: 'power1.out', duration: 1.5 }, 114);
+    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'power1.in', duration: 5.5 }, 115);
 
-    /* settle room so the glowing schedule holds before the pin releases */
-    tl.to({}, { duration: Math.max(4, 130 - tl.duration()) });
+    /* one short beat before the pin releases — not a long dead hold */
+    tl.to({}, { duration: Math.max(1.5, 122 - tl.duration()) });
 
     /* ---------- Act 3: line wraps the copied result, staff approve (pinned) ---------- */
     const svg = $('#approvalLines');
@@ -676,7 +676,7 @@
       scrollTrigger: {
         trigger: '#approvalsPin',
         start: 'top top',
-        end: '+=2000',
+        end: '+=1150',
         pin: true,
         anticipatePin: 1,
         scrub: 0.6,
@@ -684,32 +684,34 @@
     });
     /* line B is already drawn (in layout) — the vertical line simply continues from Act 2.
        Its pulse fades in to keep the downward flow going, and the message appears right away. */
-    lines.to(stemPulseB, { opacity: 1, ease: 'power1.out', duration: 1.5 }, 0);
-    lines.to(msg, { opacity: 1, ease: 'power2.out', duration: 2 }, 0.5);
-    /* the line splits and traces both sides of the bubble, glow intensifying */
-    lines.to(wrapProg, { v: 1, ease: 'none', duration: 5.5, onUpdate: applyWrap }, 4.4);
-    lines.to(svg, { '--glow': 1, ease: 'power1.in', duration: 5.5 }, 4.4);
+    lines.to(stemPulseB, { opacity: 1, ease: 'power1.out', duration: 1 }, 0);
+    lines.to(msg, { opacity: 1, ease: 'power2.out', duration: 1.7 }, 0.3);
+    /* the line splits and races around both sides of the bubble — starts while the message is
+       still arriving (no dead gap), and eased rather than linear so it doesn't feel robotic */
+    lines.to(wrapProg, { v: 1, ease: 'power1.inOut', duration: 3, onUpdate: applyWrap }, 2.2);
+    lines.to(svg, { '--glow': 1, ease: 'power1.in', duration: 3 }, 2.2);
 
     const n = avatars.length;
 
-    /* profiles pop in, left → right */
-    const AV_START = 9.5;
+    /* profiles pop in, left → right — they start WHILE the wrap is still closing, so the
+       beats overlap instead of queueing up one after another */
+    const AV_START = 4.6;
     avatars.forEach((a, i) => {
-      lines.to(a, { opacity: 1, scale: 1, ease: 'back.out(1.8)', duration: 1.1 }, AV_START + i * 0.6);
+      lines.to(a, { opacity: 1, scale: 1, ease: 'back.out(1.8)', duration: 0.85 }, AV_START + i * 0.42);
     });
 
     /* thumbs-up wave, right → left: each profile rises as its thumb pops, then settles.
        Sam (leftmost) reacts last, and the pin releases just after. */
-    const TH_START = 14;
+    const TH_START = 7;
     avatars.forEach((a, i) => {
       const order = n - 1 - i;           /* rightmost reacts first */
-      const t = TH_START + order * 0.9;
-      lines.to(a, { y: -16, ease: 'power2.out', duration: 0.55 }, t);
-      lines.to(thumbs[i], { scale: 1, ease: 'back.out(2.6)', duration: 0.7 }, t + 0.12);
-      lines.to(a, { y: 0, ease: 'power2.inOut', duration: 0.7 }, t + 0.6);
+      const t = TH_START + order * 0.55;
+      lines.to(a, { y: -16, ease: 'power2.out', duration: 0.45 }, t);
+      lines.to(thumbs[i], { scale: 1, ease: 'back.out(2.6)', duration: 0.6 }, t + 0.1);
+      lines.to(a, { y: 0, ease: 'power2.inOut', duration: 0.6 }, t + 0.5);
     });
     /* small settle so the pin doesn't release the instant Sam's thumb lands */
-    lines.to({}, { duration: 1.5 });
+    lines.to({}, { duration: 1 });
 
     ScrollTrigger.refresh();
 
