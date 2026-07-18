@@ -678,7 +678,7 @@ body {
    this the section's first screen is empty gradient and reads as "the end" */
 .cta-lead {
   position: absolute; top: 44px; left: 50%; transform: translateX(-50%);
-  z-index: 2;
+  z-index: 3;
   display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
   color: rgba(255,255,255,0.72);
   font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;

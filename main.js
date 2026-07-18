@@ -484,15 +484,15 @@
       scrollTrigger: {
         trigger: '#stagePin',
         start: 'top top',
-        end: '+=8784',
+        end: '+=8590',
         scrub: 0.6,
         pin: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate(self) {
           const p = self.progress;
-          stage.classList.toggle('vibrate', p > 0.096 && p < 0.266);
-          ring.classList.toggle('on', p > 0.918);
+          stage.classList.toggle('vibrate', p > 0.098 && p < 0.272);
+          ring.classList.toggle('on', p > 0.916);
         },
       },
     });
@@ -512,8 +512,8 @@
 
     /* …and gets "clicked" — the downstroke bottoms out at ~30.0 */
     tl.to(genBtn, { scale: 0.86, ease: 'power2.in', duration: 0.8 }, 29.4)
-      .to(genBtn, { scale: 1.05, ease: 'power2.out', duration: 0.7 }, 30.2)
-      .to(genBtn, { scale: 1, duration: 0.6 }, 30.9);
+      .to(genBtn, { scale: 1.08, ease: 'back.out(2)', duration: 0.6 }, 30.2)
+      .to(genBtn, { opacity: 0, scale: 0.4, ease: 'power2.in', duration: 1.2 }, 30.9);
 
     /* beat 4 — the press ITSELF dispels the pile: the scatter fires on the downstroke (29.6),
        fast, so it reads as "pressing blew the texts away" — not a later, separate transition */
@@ -521,13 +521,12 @@
       tl.to(el, { x: el._start.x * 1.06, y: el._start.y, rotation: el._start.r, opacity: 0, ease: 'power3.in', duration: 1, stagger: 0 }, 29.6 + i * 0.02);
     });
     tl.to(pops, { opacity: 0, scale: 0.5, ease: 'power2.in', duration: 0.9, stagger: 0.03 }, 29.6);
-    tl.to(genBtn, { opacity: 0, scale: 0.5, ease: 'power2.in', duration: 1.8 }, 33);
 
     /* beat 5 — a beat passes, THEN the 2×4 availability forms are revealed underneath, filling out */
-    tl.fromTo(cards, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 2, stagger: 0.3 }, 37);
+    tl.fromTo(cards, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 2, stagger: 0.3 }, 34.3);
     cards.forEach((card, f) => {
       $$('.day-row.fills', card).forEach((row, r) => {
-        const at = 39.5 + f * 1.5 + r * 1.3;
+        const at = 36.8 + f * 1.5 + r * 1.3;
         const box = $('.box', row);
         tl.to(row, { backgroundColor: '#EFF5FF', borderColor: 'rgba(13,123,255,0.45)', duration: 0.9 }, at)
           .to(box, { backgroundColor: '#0D7BFF', borderColor: '#0D7BFF', duration: 0.9 }, at)
@@ -537,11 +536,11 @@
     });
 
     /* glass description card over the forms */
-    tl.to(descCard, { opacity: 1, y: 0, duration: 2.5 }, 46)
-      .to(descCard, { opacity: 0, y: -20, ease: 'power1.in', duration: 2 }, 60.6);
+    tl.to(descCard, { opacity: 1, y: 0, duration: 2.5 }, 43.3)
+      .to(descCard, { opacity: 0, y: -20, ease: 'power1.in', duration: 2 }, 57.9);
 
     /* beat 6 — brief beat of fully-filled forms, then contents vanish fast */
-    tl.to($$('.mini-form-inner'), { opacity: 0, duration: 1.6, stagger: 0.05, ease: 'power1.in' }, 60.5);
+    tl.to($$('.mini-form-inner'), { opacity: 0, duration: 1.6, stagger: 0.05, ease: 'power1.in' }, 57.8);
 
     /* beat 7 — the empty frames merge into the schedule window's frame */
     cards.forEach((card, i) => {
@@ -554,21 +553,21 @@
         borderRadius: 18,
         ease: 'power2.inOut',
         duration: 5,
-      }, 62.5 + i * 0.22);
+      }, 59.8 + i * 0.22);
     });
-    tl.to(schedWin, { opacity: 1, duration: 2.5 }, 65.2);
-    tl.to(cards, { opacity: 0, duration: 1.6 }, 66.8);
+    tl.to(schedWin, { opacity: 1, duration: 2.5 }, 62.5);
+    tl.to(cards, { opacity: 0, duration: 1.6 }, 64.1);
 
     /* ===== NEW ACT — the window opens as a booking CALENDAR, which Cale reads ===== */
     /* student bookings pop into the week */
-    tl.to(calChips, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1.4, stagger: 0.16 }, 67.5);
+    tl.to(calChips, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1.4, stagger: 0.16 }, 64.8);
     /* the "Cale reads your bookings" card stays up through the read */
-    tl.to(descCard2, { opacity: 1, y: 0, duration: 2 }, 71)
-      .to(descCard2, { opacity: 0, y: -20, ease: 'power1.in', duration: 1.8 }, 81);
+    tl.to(descCard2, { opacity: 1, y: 0, duration: 2 }, 68.3)
+      .to(descCard2, { opacity: 0, y: -20, ease: 'power1.in', duration: 1.8 }, 78.3);
 
     /* --- READ PHASE: bar sweeps top → bottom, lighting up each booking as it passes --- */
-    tl.set(scanBar, { opacity: 1, top: '0%', scaleY: 1, filter: 'hue-rotate(0deg)' }, 72.5);
-    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'none', duration: 11 }, 72.5);
+    tl.set(scanBar, { opacity: 1, top: '0%', scaleY: 1, filter: 'hue-rotate(0deg)' }, 69.8);
+    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'none', duration: 11 }, 69.8);
     /* each chip hovers up and switches on a steady glow as the reading bar reaches it,
        and stays lit for the rest of the read (chips ordered by vertical position) */
     const chipsByY = [...calChips].sort(
@@ -576,7 +575,7 @@
     );
     const nChipSpan = Math.max(1, chipsByY.length - 1);
     chipsByY.forEach((chip, i) => {
-      const at = 73 + (i / nChipSpan) * 9;
+      const at = 70.3 + (i / nChipSpan) * 9;
       tl.to(chip, {
         y: -5,
         filter: 'brightness(1.12)',
@@ -592,34 +591,34 @@
       scaleY: 2.2,
       boxShadow: '0 0 26px 5px rgba(13,123,255,0.75), 0 0 60px 12px rgba(13,123,255,0.32)',
       duration: 0.75, yoyo: true, repeat: 1, ease: 'sine.inOut',
-    }, 83.5);
-    tl.to(scanBar, { top: '0%', ease: 'power2.inOut', duration: 3 }, 85);
-    tl.to(scanBar, { filter: 'hue-rotate(42deg)', ease: 'power1.inOut', duration: 3 }, 85);
+    }, 80.8);
+    tl.to(scanBar, { top: '0%', ease: 'power2.inOut', duration: 3 }, 82.3);
+    tl.to(scanBar, { filter: 'hue-rotate(42deg)', ease: 'power1.inOut', duration: 3 }, 82.3);
 
     /* the schedule body sits (empty) behind the still-opaque calendar; its background is
        uncovered by the wipe, and its pieces POP in as the bar sweeps past their position */
-    tl.set(schedBody, { opacity: 1 }, 87.6);
+    tl.set(schedBody, { opacity: 1 }, 84.9);
 
     /* --- BUILD PHASE: bar sweeps down FAST — a quick transition, not a slow reveal —
            wiping the calendar away in its wake; schedule pieces pop in as it passes --- */
-    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'power2.inOut', duration: 4 }, 88.5);
+    tl.fromTo(scanBar, { top: '0%' }, { top: '97%', ease: 'power2.inOut', duration: 4 }, 85.8);
     tl.fromTo(calBody,
       { clipPath: 'inset(0% 0% 0% 0%)' },
-      { clipPath: 'inset(100% 0% 0% 0%)', ease: 'power2.inOut', duration: 4 }, 88.5);
+      { clipPath: 'inset(100% 0% 0% 0%)', ease: 'power2.inOut', duration: 4 }, 85.8);
     /* pieces pop in right as the bar clears their row */
-    tl.to(schedTop, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1 }, 89.3);
-    tl.to(hoursPanel, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1 }, 91.6);
-    tl.set(calBody, { opacity: 0 }, 92.6);
-    tl.to(scanBar, { opacity: 0, duration: 0.8 }, 92.6);        /* day columns stay blank for now */
+    tl.to(schedTop, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1 }, 86.6);
+    tl.to(hoursPanel, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1 }, 88.9);
+    tl.set(calBody, { opacity: 0 }, 89.9);
+    tl.to(scanBar, { opacity: 0, duration: 0.8 }, 89.9);        /* day columns stay blank for now */
 
     /* beat 8 — days pop in left to right */
     cols.forEach((col, i) => {
-      tl.to(col, { opacity: 1, y: 0, scale: 1, ease: 'back.out(1.6)', duration: 1.6 }, 95.5 + i * 1.05);
+      tl.to(col, { opacity: 1, y: 0, scale: 1, ease: 'back.out(1.6)', duration: 1.6 }, 92.8 + i * 1.05);
     });
 
     /* beat 9 — worker blocks rise from the bottom of each day,
        first the most dramatic, each one after faster than the last */
-    let t = 101;
+    let t = 98.3;
     let dur = 3.2;
     blocks.forEach((b) => {
       tl.to(b, { scaleY: 1, ease: 'power3.out', duration: dur }, t);
@@ -642,21 +641,21 @@
           el.textContent = fmtHours(v);
         });
       },
-    }, 101);
+    }, 98.3);
 
     /* beat 10 — the finished schedule pops, then the revolving glow takes over (via onUpdate class) */
-    tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 112)
-      .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 113.4);
+    tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 109.3)
+      .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 110.7);
 
     /* line A grows downward out of the schedule and the travel STARTS WHILE IT'S STILL DRAWING —
        overlapping (not sequencing) these keeps the momentum from the schedule pop rolling */
     layoutStemDown();
-    tl.to(stemDownProg, { v: 1, ease: 'power2.out', duration: 2, onUpdate: applyStemDown }, 113.5);
-    tl.to(stemPulse, { opacity: 1, ease: 'power1.out', duration: 1.5 }, 114);
-    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'power1.in', duration: 5.5 }, 115);
+    tl.to(stemDownProg, { v: 1, ease: 'power2.out', duration: 2, onUpdate: applyStemDown }, 110.8);
+    tl.to(stemPulse, { opacity: 1, ease: 'power1.out', duration: 1.5 }, 111.3);
+    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'power1.in', duration: 5.5 }, 112.3);
 
     /* one short beat before the pin releases — not a long dead hold */
-    tl.to({}, { duration: Math.max(1.5, 122 - tl.duration()) });
+    tl.to({}, { duration: Math.max(1.5, 119.3 - tl.duration()) });
 
     /* ---------- Act 3: line wraps the copied result, staff approve (pinned) ---------- */
     const svg = $('#approvalLines');
