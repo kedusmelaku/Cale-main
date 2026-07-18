@@ -231,7 +231,10 @@
     $('#navLinks').classList.remove('open');
     const reducedM = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const canSmooth = !reducedM && typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined';
-    const destY = id === '#top' ? 0 : Math.max(0, target.getBoundingClientRect().top + scrollY - 84);
+    const rawY = Math.max(0, target.getBoundingClientRect().top + scrollY);
+    /* #top starts at 0; #access lands flush inside the dark section (no top gap — the chevron
+       is only meant for the Under-the-hood view); everything else clears the floating nav */
+    const destY = id === '#top' ? 0 : id === '#access' ? rawY : Math.max(0, rawY - 84);
     if (canSmooth) {
       const dur = Math.min(1.2, Math.max(0.45, Math.abs(destY - scrollY) / 12000));
       gsap.to(window, { duration: dur, ease: 'power2.inOut', scrollTo: { y: destY, autoKill: true } });
@@ -507,16 +510,17 @@
     /* beat 3 — the Generate button appears… */
     tl.to(genBtn, { scale: 1, opacity: 1, ease: 'back.out(1.8)', duration: 2.2 }, 26);
 
-    /* …and gets "clicked" */
+    /* …and gets "clicked" — the downstroke bottoms out at ~30.0 */
     tl.to(genBtn, { scale: 0.86, ease: 'power2.in', duration: 0.8 }, 29.4)
       .to(genBtn, { scale: 1.05, ease: 'power2.out', duration: 0.7 }, 30.2)
       .to(genBtn, { scale: 1, duration: 0.6 }, 30.9);
 
-    /* beat 4 — the click dispels the pile (completes before anything else happens) */
+    /* beat 4 — the press ITSELF dispels the pile: the scatter fires on the downstroke (29.6),
+       fast, so it reads as "pressing blew the texts away" — not a later, separate transition */
     sides.forEach((el, i) => {
-      tl.to(el, { x: el._start.x * 1.06, y: el._start.y, rotation: el._start.r, opacity: 0, ease: 'power2.in', duration: 2.2 }, 32 + i * 0.06);
+      tl.to(el, { x: el._start.x * 1.06, y: el._start.y, rotation: el._start.r, opacity: 0, ease: 'power3.in', duration: 1, stagger: 0 }, 29.6 + i * 0.02);
     });
-    tl.to(pops, { opacity: 0, scale: 0.5, ease: 'power1.in', duration: 1.6, stagger: 0.06 }, 32);
+    tl.to(pops, { opacity: 0, scale: 0.5, ease: 'power2.in', duration: 0.9, stagger: 0.03 }, 29.6);
     tl.to(genBtn, { opacity: 0, scale: 0.5, ease: 'power2.in', duration: 1.8 }, 33);
 
     /* beat 5 — a beat passes, THEN the 2×4 availability forms are revealed underneath, filling out */
