@@ -234,7 +234,7 @@
     const rawY = Math.max(0, target.getBoundingClientRect().top + scrollY);
     /* #top starts at 0; #access lands flush inside the dark section (no top gap — the chevron
        is only meant for the Under-the-hood view); everything else clears the floating nav */
-    const destY = id === '#top' ? 0 : id === '#access' ? rawY : Math.max(0, rawY - 84);
+    const destY = id === '#top' ? 0 : id === '#access' ? rawY + 15 : Math.max(0, rawY - 84);
     if (canSmooth) {
       const dur = Math.min(1.2, Math.max(0.45, Math.abs(destY - scrollY) / 12000));
       gsap.to(window, { duration: dur, ease: 'power2.inOut', scrollTo: { y: destY, autoKill: true } });

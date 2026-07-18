@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap');
-
 /* ============================================================
    Cale — pitch site v3 (scrollytelling)
    Light theme. Scroll-scrubbed story built with GSAP ScrollTrigger.
@@ -646,7 +644,10 @@ body {
   padding: 28px;
 }
 .trio-card { position: relative; }
-/* float is applied to the card itself once revealed */
+/* float is applied to the card itself once revealed. will-change promotes each card to its
+   own compositor layer so its backdrop-blur is composited once and merely transformed each
+   frame, instead of the 14px blur being re-sampled on every step (the source of the stutter) */
+.trio-card.in.f1, .trio-card.in.f2, .trio-card.in.f3 { will-change: transform; }
 .trio-card.in.f1 { animation: floaty 6s ease-in-out 0.9s infinite; }
 .trio-card.in.f2 { animation: floaty 7s ease-in-out 1.4s infinite; }
 .trio-card.in.f3 { animation: floaty 6.5s ease-in-out 1.9s infinite; }
