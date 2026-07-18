@@ -203,6 +203,7 @@
   buildPeople($('#people'));
 
   /* ---------------- shared UI (works with or without GSAP) ---------------- */
+  let stopTour = () => {};   /* the auto-scroll IIFE fills this in; a nav click parks the tour */
   const nav = $('#nav');
   const progressBar = $('.progress');
   addEventListener('scroll', () => {
@@ -213,6 +214,31 @@
 
   $('#navToggle').addEventListener('click', () => $('#navLinks').classList.toggle('open'));
   $$('#navLinks a').forEach((a) => a.addEventListener('click', () => $('#navLinks').classList.remove('open')));
+
+  /* smooth in-page anchor scrolling via GSAP ScrollToPlugin. A deliberate jump can't fight the
+     tour, so we park the tour first. Falls back to a native jump without GSAP or under reduced-motion.
+     Scrubbed sections still fast-forward as they pass under the scroll — that's expected, not a lock;
+     the user keeps full control (autoKill stops the tween the moment they scroll themselves). */
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const id = a.getAttribute('href');
+    if (id.length < 2) return;                       /* ignore a bare "#" */
+    const target = document.querySelector(id);
+    if (!target) return;
+    e.preventDefault();
+    stopTour();
+    $('#navLinks').classList.remove('open');
+    const reducedM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canSmooth = !reducedM && typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined';
+    const destY = id === '#top' ? 0 : Math.max(0, target.getBoundingClientRect().top + scrollY - 84);
+    if (canSmooth) {
+      const dur = Math.min(1.2, Math.max(0.45, Math.abs(destY - scrollY) / 12000));
+      gsap.to(window, { duration: dur, ease: 'power2.inOut', scrollTo: { y: destY, autoKill: true } });
+    } else {
+      scrollTo(0, destY);
+    }
+  });
 
   /* reveal-on-scroll for the quiet sections */
   const io = new IntersectionObserver((entries) => {
@@ -268,8 +294,16 @@
 
     const SPEED = 380;                 /* px per second — watchable but not sluggish */
     let autoOn = false, paused = false, raf = null, lastT = 0, expectedY = -1, resumeTimer = null;
+    let ended = false, runLimit = Infinity;
     const maxScroll = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
     const isLanding = () => scrollY < innerHeight * 0.6;   /* still on the hero */
+    /* the tour drives the scrubbed animation and hands off where the reading starts:
+       the top of "Under the hood". Past that it's prose and a form — not ours to scroll. */
+    const tourEnd = () => {
+      const el = document.getElementById('extras');
+      if (!el) return maxScroll();
+      return Math.min(el.getBoundingClientRect().top + scrollY, maxScroll());
+    };
 
     const render = () => {
       btn.classList.toggle('playing', autoOn);
@@ -280,15 +314,18 @@
       if (!lastT) lastT = t;
       const dt = Math.min((t - lastT) / 1000, 0.05);
       lastT = t;
-      const next = Math.min(scrollY + SPEED * dt, maxScroll());
+      const next = Math.min(scrollY + SPEED * dt, runLimit);
       scrollTo(0, next);
       expectedY = Math.round(next);
-      if (next >= maxScroll() - 1) { stop(); return; }   /* reached the end */
+      if (next >= runLimit - 1) { ended = true; stop(); return; }   /* done — hand back control */
       raf = requestAnimationFrame(step);
     }
     function start() {
       if (autoOn || paused) return;
       clearTimeout(resumeTimer);
+      /* if we're already at/past the story's end, an explicit Play means "take me down" */
+      const storyEnd = tourEnd();
+      runLimit = scrollY >= storyEnd - 2 ? maxScroll() : storyEnd;
       autoOn = true; lastT = 0;
       raf = requestAnimationFrame(step);
       render();
@@ -301,13 +338,17 @@
     }
     function scheduleResume() {
       clearTimeout(resumeTimer);
-      if (paused || scrollY >= maxScroll() - 2) return;   /* don't resume at the very bottom */
+      /* once the tour has finished, it stays finished — it must never grab the page back
+         while the reader is working through the cards. Only an explicit Play restarts it. */
+      if (paused || ended) return;
       resumeTimer = setTimeout(start, isLanding() ? 7000 : 2000);
     }
     function userTakeover() {
       if (autoOn) stop();
       scheduleResume();
     }
+    /* a deliberate nav click parks the tour (button returns to Play); it won't auto-resume */
+    stopTour = () => { clearTimeout(resumeTimer); if (autoOn) stop(); paused = true; };
 
     /* user intent = real input; auto-scroll's own scrollTo never fires these */
     addEventListener('wheel', userTakeover, { passive: true });
@@ -322,7 +363,7 @@
 
     btn.addEventListener('click', () => {
       if (autoOn) { paused = true; stop(); clearTimeout(resumeTimer); }
-      else { paused = false; clearTimeout(resumeTimer); start(); }
+      else { paused = false; ended = false; clearTimeout(resumeTimer); start(); }
     });
 
     render();
@@ -336,6 +377,7 @@
     return;
   }
   gsap.registerPlugin(ScrollTrigger);
+  if (typeof ScrollToPlugin !== 'undefined') gsap.registerPlugin(ScrollToPlugin);
 
   /* fit the 1000×640 stage to any viewport */
   const stage = $('#stage');
@@ -439,15 +481,15 @@
       scrollTrigger: {
         trigger: '#stagePin',
         start: 'top top',
-        end: '+=9360',
+        end: '+=8784',
         scrub: 0.6,
         pin: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate(self) {
           const p = self.progress;
-          stage.classList.toggle('vibrate', p > 0.09 && p < 0.25);
-          ring.classList.toggle('on', p > 0.86);
+          stage.classList.toggle('vibrate', p > 0.096 && p < 0.266);
+          ring.classList.toggle('on', p > 0.918);
         },
       },
     });
@@ -602,15 +644,15 @@
     tl.to(schedWin, { scale: 1.035, ease: 'power1.inOut', duration: 1.4 }, 112)
       .to(schedWin, { scale: 1, ease: 'power1.inOut', duration: 1.4 }, 113.4);
 
-    /* line A grows downward out of the schedule, then the schedule + line travel
-       upward together — so scrolling feels like descending the line toward the message */
+    /* line A grows downward out of the schedule and the travel STARTS WHILE IT'S STILL DRAWING —
+       overlapping (not sequencing) these keeps the momentum from the schedule pop rolling */
     layoutStemDown();
-    tl.to(stemDownProg, { v: 1, ease: 'power2.out', duration: 3, onUpdate: applyStemDown }, 114);
-    tl.to(stemPulse, { opacity: 1, ease: 'power1.out', duration: 2 }, 116);
-    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'power1.in', duration: 8 }, 116);
+    tl.to(stemDownProg, { v: 1, ease: 'power2.out', duration: 2, onUpdate: applyStemDown }, 113.5);
+    tl.to(stemPulse, { opacity: 1, ease: 'power1.out', duration: 1.5 }, 114);
+    tl.to(stageTravel, { y: () => -innerHeight * 0.95, ease: 'power1.in', duration: 5.5 }, 115);
 
-    /* settle room so the glowing schedule holds before the pin releases */
-    tl.to({}, { duration: Math.max(4, 130 - tl.duration()) });
+    /* one short beat before the pin releases — not a long dead hold */
+    tl.to({}, { duration: Math.max(1.5, 122 - tl.duration()) });
 
     /* ---------- Act 3: line wraps the copied result, staff approve (pinned) ---------- */
     const svg = $('#approvalLines');
@@ -676,7 +718,7 @@
       scrollTrigger: {
         trigger: '#approvalsPin',
         start: 'top top',
-        end: '+=2000',
+        end: '+=1150',
         pin: true,
         anticipatePin: 1,
         scrub: 0.6,
@@ -684,32 +726,34 @@
     });
     /* line B is already drawn (in layout) — the vertical line simply continues from Act 2.
        Its pulse fades in to keep the downward flow going, and the message appears right away. */
-    lines.to(stemPulseB, { opacity: 1, ease: 'power1.out', duration: 1.5 }, 0);
-    lines.to(msg, { opacity: 1, ease: 'power2.out', duration: 2 }, 0.5);
-    /* the line splits and traces both sides of the bubble, glow intensifying */
-    lines.to(wrapProg, { v: 1, ease: 'none', duration: 5.5, onUpdate: applyWrap }, 4.4);
-    lines.to(svg, { '--glow': 1, ease: 'power1.in', duration: 5.5 }, 4.4);
+    lines.to(stemPulseB, { opacity: 1, ease: 'power1.out', duration: 1 }, 0);
+    lines.to(msg, { opacity: 1, ease: 'power2.out', duration: 1.7 }, 0.3);
+    /* the line splits and races around both sides of the bubble — starts while the message is
+       still arriving (no dead gap), and eased rather than linear so it doesn't feel robotic */
+    lines.to(wrapProg, { v: 1, ease: 'power1.inOut', duration: 3, onUpdate: applyWrap }, 2.2);
+    lines.to(svg, { '--glow': 1, ease: 'power1.in', duration: 3 }, 2.2);
 
     const n = avatars.length;
 
-    /* profiles pop in, left → right */
-    const AV_START = 9.5;
+    /* profiles pop in, left → right — they start WHILE the wrap is still closing, so the
+       beats overlap instead of queueing up one after another */
+    const AV_START = 4.6;
     avatars.forEach((a, i) => {
-      lines.to(a, { opacity: 1, scale: 1, ease: 'back.out(1.8)', duration: 1.1 }, AV_START + i * 0.6);
+      lines.to(a, { opacity: 1, scale: 1, ease: 'back.out(1.8)', duration: 0.85 }, AV_START + i * 0.42);
     });
 
     /* thumbs-up wave, right → left: each profile rises as its thumb pops, then settles.
        Sam (leftmost) reacts last, and the pin releases just after. */
-    const TH_START = 14;
+    const TH_START = 7;
     avatars.forEach((a, i) => {
       const order = n - 1 - i;           /* rightmost reacts first */
-      const t = TH_START + order * 0.9;
-      lines.to(a, { y: -16, ease: 'power2.out', duration: 0.55 }, t);
-      lines.to(thumbs[i], { scale: 1, ease: 'back.out(2.6)', duration: 0.7 }, t + 0.12);
-      lines.to(a, { y: 0, ease: 'power2.inOut', duration: 0.7 }, t + 0.6);
+      const t = TH_START + order * 0.55;
+      lines.to(a, { y: -16, ease: 'power2.out', duration: 0.45 }, t);
+      lines.to(thumbs[i], { scale: 1, ease: 'back.out(2.6)', duration: 0.6 }, t + 0.1);
+      lines.to(a, { y: 0, ease: 'power2.inOut', duration: 0.6 }, t + 0.5);
     });
     /* small settle so the pin doesn't release the instant Sam's thumb lands */
-    lines.to({}, { duration: 1.5 });
+    lines.to({}, { duration: 1 });
 
     ScrollTrigger.refresh();
 

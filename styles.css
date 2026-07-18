@@ -673,6 +673,22 @@ body {
   isolation: isolate;
 }
 .flow-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+/* lead-in signal at the top of the dark band — the CTA copy sits ~50vh down, so without
+   this the section's first screen is empty gradient and reads as "the end" */
+.cta-lead {
+  position: absolute; top: 44px; left: 50%; transform: translateX(-50%);
+  z-index: 2;
+  display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+  color: rgba(255,255,255,0.72);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  text-decoration: none;
+  animation: ctaLead 2.2s var(--ease) infinite;
+}
+.cta-lead:hover { color: #fff; }
+@keyframes ctaLead {
+  0%, 100% { transform: translate(-50%, 0); opacity: .72; }
+  50% { transform: translate(-50%, 6px); opacity: 1; }
+}
 /* two large irregular gradient fields that slowly rotate + breathe (the ebb) */
 .flow-bg::before, .flow-bg::after {
   content: '';
@@ -889,7 +905,7 @@ body.no-anim .approvals .thumb { transform: scale(1); }
 body.no-anim .reveal { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .field::before, .field::after, .shimmer, .scroll-hint,
-  .blob, .glow-ring::before, .trio-card.in, .nav-cta { animation: none !important; }
+  .blob, .glow-ring::before, .trio-card.in, .nav-cta, .cta-lead { animation: none !important; }
   .flow-bg::before, .flow-bg::after { animation: none !important; }
   .stage.vibrate .bubble .bubble-inner { animation: none !important; }
   .how-eyebrow, .how-step, .how-arrow { animation: none !important; opacity: 1 !important; transform: none !important; }
