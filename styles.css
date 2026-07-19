@@ -233,7 +233,7 @@ body {
 .nav-links a:hover {
   color: var(--ink);
 }
-.nav-cta {
+.nav-links a.nav-cta {
   display: inline-block;
   padding: 9px 17px;
   border-radius: 11px;
@@ -246,9 +246,9 @@ body {
     #0d7bff
   );
   background-size: 300% 300%;
-  color: #fff !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
   transform: translateY(0) scale(1);
   box-shadow: 0 0px 0px rgba(13, 123, 255, 0);
   filter: brightness(1);
@@ -270,7 +270,8 @@ body {
     background-position: 0% 50%;
   }
 }
-.nav-cta:hover {
+.nav-links a.nav-cta:hover {
+  color: #fff;
   transform: translateY(-2px) scale(1.01);
   box-shadow: 0 10px 26px rgba(13, 123, 255, 0.4);
   filter: brightness(1.03);
