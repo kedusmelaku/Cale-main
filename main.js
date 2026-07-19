@@ -289,6 +289,19 @@
     }
   });
 
+  /* email field: border glow that tracks the cursor (pointer devices only) */
+  (() => {
+    const field = $('.email-field');
+    if (!field || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    field.addEventListener('mousemove', (e) => {
+      const r = field.getBoundingClientRect();
+      field.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`);
+      field.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`);
+      field.style.setProperty('--glow', '1');
+    });
+    field.addEventListener('mouseleave', () => field.style.setProperty('--glow', '0'));
+  })();
+
   /* ---------------- auto-scroll guided tour ---------------- */
   (() => {
     const btn = $('#autoToggle');
@@ -772,7 +785,16 @@
     };
     (document.fonts?.ready || Promise.resolve()).then(relayout);
     let rz;
-    addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(relayout, 180); });
+    let lastW = innerWidth;
+    addEventListener('resize', () => {
+      /* Ignore height-only resizes (mobile keyboard show/hide): they'd fire a
+         ScrollTrigger.refresh that re-clamps scroll and fights the focused input,
+         creating a stutter loop that makes the form untypeable on phones. */
+      if (innerWidth === lastW) return;
+      lastW = innerWidth;
+      clearTimeout(rz);
+      rz = setTimeout(relayout, 180);
+    });
 
     /* ---------- Act 5: lock the CTA copy in the viewport as it centers ---------- */
     ScrollTrigger.create({

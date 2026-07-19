@@ -117,6 +117,10 @@
 
       <!-- ============ ACT 2 — THE SCRAMBLE → GENERATE → FORMS → SCHEDULE (pinned scrub) ============ -->
       <section id="story">
+        <div class="sr-only">
+          <h2>How Cale schedules your Mathnasium center</h2>
+          <p>Every week, tutoring centers face the same scramble: figuring out which instructors to schedule against how many students are booked. Cale fixes this in minutes. Staff submit their weekly availability through a single shared link — each person enters a PIN, picks their days, and sets their hours, with no accounts or passwords to manage. Cale reads your Google Calendar to see how many students are booked into each session block, then generates a full week's staff schedule that matches instructors to real student demand. The finished schedule formats itself as copy-ready text you can paste straight to your staff group, where instructors confirm their shifts.</p>
+        </div>
         <div class="story-head">
           <div class="tag">Sound familiar?</div>
           <h2>Every week, the same scramble.</h2>
@@ -250,12 +254,14 @@ Morgan : 12-2</pre>
           <p class="cta-sub-phase2">Get Cale running for your center — free for the first two weeks, no commitment.</p>
           <p class="cta-sub">Join the pilot now and get Cale running for your center for free.</p>
           <form class="email-form" id="accessForm" action="https://formspree.io/f/mbdnrkdk" method="POST">
-            <input class="email-input" type="email" name="email" required placeholder="you@yourcenter.com" aria-label="Your email" />
+            <div class="email-field">
+              <input class="email-input" type="email" name="email" required placeholder="you@yourcenter.com" aria-label="Your email" />
+            </div>
             <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
             <input type="hidden" name="_subject" value="Cale access request" />
             <button class="email-submit" type="submit">Request access</button>
           </form>
-          <div class="form-success" id="formSuccess" hidden><span class="tick">✓</span> You're on the list — we'll be in touch soon.</div>
+          <div class="form-success" id="formSuccess" hidden><span class="tick">✓</span> You're on the list — I'll be in touch soon.</div>
           <div class="form-error" id="formError" hidden>Something went wrong. Please try again, or email <a href="mailto:kedusmela@gmail.com">kedusmela@gmail.com</a> directly.</div>
           <div class="cta-note">No credit card. Cancel anytime.</div>
         </div>
