@@ -248,10 +248,13 @@ body {
   color: #fff !important;
   font-weight: 600 !important;
   font-size: 14px !important;
+  transform: translateY(0) scale(1);
+  box-shadow: 0 0px 0px rgba(13, 123, 255, 0);
+  filter: brightness(1);
   transition:
-    transform 0.25s var(--ease),
-    box-shadow 0.25s var(--ease),
-    filter 0.25s var(--ease),
+    transform 0.35s var(--ease),
+    box-shadow 0.35s var(--ease),
+    filter 0.35s var(--ease),
     background-position 0.75s var(--ease);
   animation: ctaFlow 7s ease infinite;
 }
