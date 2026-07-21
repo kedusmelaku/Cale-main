@@ -95,7 +95,7 @@
         </div>
       </div>`).join('');
     return `
-      <div class="window-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">usecale.vercel.app</span></div>
+      <div class="window-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">app.usecale.com</span></div>
       <div class="body-wrap">
         <div class="sched-body">
           <div class="sched-top">
@@ -109,7 +109,7 @@
           </div>
         </div>
         <div class="cal-body">
-          <div class="cal-gutter">${['3 PM','4 PM','5 PM','6 PM','7 PM'].map((t) => `<span>${t}</span>`).join('')}</div>
+          <div class="cal-gutter">${["3 PM", "4 PM", "5 PM", "6 PM", "7 PM"].map((t) => `<span>${t}</span>`).join("")}</div>
           <div class="cal-cols">${calCols}</div>
         </div>
         <div class="scan-bar"></div>
