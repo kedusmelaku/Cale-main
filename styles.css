@@ -27,7 +27,7 @@
   --p-green: #38845e;
   --p-orange: #dd9a3f;
   --p-purple: #8364ca;
-  --p-red: #d9595b;   /* original red (Casey); kept as-is by choice, below 4.5:1 with white */
+  --p-red: #d44244;
   --blue-btn: #006ff5;   /* brand blue, a hair deeper: white text on it passes 4.5:1 */
   --line: rgba(16, 32, 64, 0.1);
   --line-strong: rgba(16, 32, 64, 0.18);
@@ -1453,10 +1453,7 @@ body {
 .blk.o {
   background: var(--p-orange);
 }
-/* white on this orange is only 2.2:1, so its names use dark ink instead (7.6:1) */
-.blk.o span {
-  color: #2a1a06;
-}
+/* Morgan's orange keeps white names by choice (below 4.5:1 contrast) */
 .blk.r {
   background: var(--p-red);
 }
