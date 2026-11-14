@@ -212,8 +212,13 @@
     progressBar.style.setProperty('--p', `${max > 0 ? (scrollY / max) * 100 : 0}%`);
   }, { passive: true });
 
-  $('#navToggle').addEventListener('click', () => $('#navLinks').classList.toggle('open'));
-  $$('#navLinks a').forEach((a) => a.addEventListener('click', () => $('#navLinks').classList.remove('open')));
+  const navToggle = $('#navToggle');
+  const setMenu = (open) => {
+    $('#navLinks').classList.toggle('open', open);
+    navToggle.setAttribute('aria-expanded', String(open));
+  };
+  navToggle.addEventListener('click', () => setMenu(!$('#navLinks').classList.contains('open')));
+  $$('#navLinks a').forEach((a) => a.addEventListener('click', () => setMenu(false)));
 
   /* smooth in-page anchor scrolling via GSAP ScrollToPlugin. A deliberate jump can't fight the
      tour, so we park the tour first. Falls back to a native jump without GSAP or under reduced-motion.
@@ -228,7 +233,7 @@
     if (!target) return;
     e.preventDefault();
     stopTour();
-    $('#navLinks').classList.remove('open');
+    setMenu(false);
     const reducedM = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const canSmooth = !reducedM && typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined';
     const rawY = Math.max(0, target.getBoundingClientRect().top + scrollY);
@@ -306,7 +311,11 @@
   (() => {
     const btn = $('#autoToggle');
     if (!btn) return;
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { btn.style.display = 'none'; return; }
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      btn.style.display = 'none';
+      const ht = $('#heroTour'); if (ht) ht.hidden = true;
+      return;
+    }
 
     const SPEED = 380;                 /* px per second — watchable but not sluggish */
     let autoOn = false, paused = false, raf = null, lastT = 0, expectedY = -1, resumeTimer = null;
@@ -381,6 +390,10 @@
       if (autoOn) { paused = true; stop(); clearTimeout(resumeTimer); }
       else { paused = false; ended = false; clearTimeout(resumeTimer); start(); }
     });
+
+    /* hero "Watch how it works" starts the same tour */
+    const heroTour = $('#heroTour');
+    if (heroTour) heroTour.addEventListener('click', () => { if (!autoOn) btn.click(); });
 
     render();
     resumeTimer = setTimeout(start, 7000);   /* the 7s-after-load rule */

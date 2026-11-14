@@ -51,7 +51,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap" />
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -75,7 +75,7 @@
         <a href="#extras">Features</a>
         <a class="nav-cta" href="#access">Request access</a>
       </div>
-      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <button class="nav-toggle" id="navToggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="navLinks">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
@@ -84,45 +84,49 @@
 
     <main class="wrap" id="top">
 
-      <!-- ============ ACT 1 — HERO (text-only intro) ============ -->
+      <!-- ============ ACT 1 — HERO (split: pitch left, this-week card right) ============ -->
       <section class="hero" id="hero">
-        <div class="hero-inner">
+        <div class="container hero-inner">
           <div class="hero-copy" id="heroCopy">
-            <div class="hero-badge">Smart scheduling for Mathnasium centers</div>
-            <h1>Scheduling that<br /><span class="shimmer">runs itself</span></h1>
+            <p class="hero-kicker">Staff scheduling for Mathnasium centers</p>
+            <h1>Scheduling that runs itself.</h1>
             <p class="lead">Cale collects staff availability, cross-references your student bookings, and generates a ready-to-send schedule — in minutes, not hours.</p>
-            <div class="how-eyebrow">Schedule in 3 easy steps</div>
-            <div class="how-strip" id="howStrip" role="group" aria-label="How Cale works">
-              <div class="how-step">
-                <div class="how-ico">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                </div>
-                <div class="how-label">Share a link</div>
-              </div>
-              <span class="how-arrow" aria-hidden="true">
-                <svg width="34" height="12" viewBox="0 0 34 12" fill="none"><path d="M1 6H28" stroke="#4C86F5" stroke-width="2" stroke-linecap="round"/><path d="M27 2l5 4-5 4" stroke="#6E77E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <div class="how-step">
-                <div class="how-ico">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
-                </div>
-                <div class="how-label">Cale builds the week</div>
-              </div>
-              <span class="how-arrow" aria-hidden="true">
-                <svg width="34" height="12" viewBox="0 0 34 12" fill="none"><path d="M1 6H28" stroke="#4C86F5" stroke-width="2" stroke-linecap="round"/><path d="M27 2l5 4-5 4" stroke="#6E77E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <div class="how-step">
-                <div class="how-ico">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                </div>
-                <div class="how-label">Paste &amp; send</div>
-              </div>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#access">Request access</a>
+              <button class="btn btn-ghost" id="heroTour" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                Watch how it works
+              </button>
             </div>
           </div>
-          <div class="scroll-hint" aria-hidden="true">
-            <span>Scroll</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+
+          <div class="week-card" aria-label="Example: next week's schedule, ready to send">
+            <div class="week-card-head">
+              <span class="week-card-title">Next week</span>
+              <span class="week-card-status">Ready to send</span>
+            </div>
+            <ul class="week-rows">
+              <li><span class="wd">Mon</span><span class="wbar"><i style="width:75%"></i></span><span class="wn">3 staff · 11 students</span></li>
+              <li><span class="wd">Tue</span><span class="wbar"><i style="width:100%"></i></span><span class="wn">3 staff · 14 students</span></li>
+              <li><span class="wd">Wed</span><span class="wbar"><i style="width:50%"></i></span><span class="wn">2 staff · 6 students</span></li>
+              <li><span class="wd">Thu</span><span class="wbar"><i style="width:60%"></i></span><span class="wn">2 staff · 9 students</span></li>
+              <li><span class="wd">Sat</span><span class="wbar"><i style="width:70%"></i></span><span class="wn">3 staff · 10 students</span></li>
+            </ul>
+            <div class="week-card-foot">
+              <span>Built from 8 availability forms</span>
+              <span class="mono">56h total</span>
+            </div>
           </div>
+        </div>
+
+        <ol class="container hero-steps" aria-label="How Cale works">
+          <li><span class="step-n">01</span>Share one availability link</li>
+          <li><span class="step-n">02</span>Cale builds the week</li>
+          <li><span class="step-n">03</span>Paste &amp; send to staff</li>
+        </ol>
+
+        <div class="scroll-hint" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
         </div>
       </section>
 
@@ -132,8 +136,8 @@
           <h2>How Cale schedules your Mathnasium center</h2>
           <p>Every week, tutoring centers face the same scramble: figuring out which instructors to schedule against how many students are booked. Cale fixes this in minutes. Staff submit their weekly availability through a single shared link — each person enters a PIN, picks their days, and sets their hours, with no accounts or passwords to manage. Cale reads your Google Calendar to see how many students are booked into each session block, then generates a full week's staff schedule that matches instructors to real student demand. The finished schedule formats itself as copy-ready text you can paste straight to your staff group, where instructors confirm their shifts.</p>
         </div>
-        <div class="story-head">
-          <div class="tag">Sound familiar?</div>
+        <div class="container story-head">
+          <p class="kicker">Sound familiar?</p>
           <h2>Every week, the same scramble.</h2>
         </div>
 
@@ -213,35 +217,65 @@ Morgan : 12-2</pre>
         </div>
       </section>
 
-      <!-- ============ ACT 4 — UNDER THE HOOD (floating cards) ============ -->
+      <!-- ============ ACT 4 — UNDER THE HOOD (feature rows with real UI details) ============ -->
       <section class="section" id="extras">
         <div class="container">
           <div class="section-head reveal">
-            <div class="tag">Under the hood</div>
+            <p class="kicker">Under the hood</p>
             <h2>Small details, big time savings.</h2>
           </div>
-          <div class="trio">
-            <div class="trio-card reveal float f1">
-              <div class="trio-ico">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+
+          <div class="feature-list">
+            <article class="feature reveal">
+              <div class="feature-copy">
+                <span class="feature-n">01</span>
+                <h3>PIN-based access</h3>
+                <p>Every staff member gets a unique PIN. They enter it, submit, done — no account creation standing between them and the form.</p>
               </div>
-              <h3>PIN-based access</h3>
-              <p>Every staff member gets a unique PIN. They enter it, submit, done — no account creation standing between them and the form.</p>
-            </div>
-            <div class="trio-card reveal float f2" style="transition-delay:0.08s">
-              <div class="trio-ico">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <div class="feature-demo" aria-hidden="true">
+                <div class="demo-pin">
+                  <span class="demo-label">Your PIN</span>
+                  <div class="pin-boxes"><span>•</span><span>•</span><span>•</span><span class="pin-live">4</span></div>
+                </div>
               </div>
-              <h3>Google Calendar sync</h3>
-              <p>Connect once. Cale reads your student session data and weighs real demand into every schedule it generates.</p>
-            </div>
-            <div class="trio-card reveal float f3" style="transition-delay:0.16s">
-              <div class="trio-ico">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </article>
+
+            <article class="feature reveal">
+              <div class="feature-copy">
+                <span class="feature-n">02</span>
+                <h3>Google Calendar sync</h3>
+                <p>Connect once. Cale reads your student session data and weighs real demand into every schedule it generates — read-only, nothing stored.</p>
               </div>
-              <h3>Copy-ready hours</h3>
-              <p>The finished week formats itself for your clipboard — every shift, every person, ready to paste wherever you send schedules.</p>
-            </div>
+              <div class="feature-demo" aria-hidden="true">
+                <div class="demo-cal">
+                  <div class="cal-chip c1"><span>Session · 4:30</span></div>
+                  <div class="cal-chip c3"><span>Session · 5:30</span></div>
+                  <div class="demo-demand"><span class="mono">4:30 PM</span> 6 students → 2 instructors</div>
+                </div>
+              </div>
+            </article>
+
+            <article class="feature reveal">
+              <div class="feature-copy">
+                <span class="feature-n">03</span>
+                <h3>Copy-ready hours</h3>
+                <p>The finished week formats itself for your clipboard — every shift, every person, ready to paste wherever you send schedules.</p>
+              </div>
+              <div class="feature-demo" aria-hidden="true">
+                <pre class="demo-copy">Hours for Tuesday (7/14)
+Sam : 3-8
+Jordan : 3-8
+Casey : 3-5</pre>
+              </div>
+            </article>
+
+            <article class="feature feature-maker reveal">
+              <div class="feature-copy">
+                <span class="feature-n">04</span>
+                <h3>Built by an instructor</h3>
+                <p>Cale was built by a Mathnasium instructor who has lived the weekly scheduling scramble firsthand — designed around how centers actually run, not a generic shift tool.</p>
+              </div>
+            </article>
           </div>
         </div>
       </section>

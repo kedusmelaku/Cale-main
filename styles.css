@@ -2,7 +2,7 @@
    Cale — pitch site v3 (scrollytelling)
    Light theme. Scroll-scrubbed story built with GSAP ScrollTrigger.
    Palette: #0D7BFF blue, #C3B9FF purple, light lavender field
-   Type: Sora (display) + Inter (body)
+   Type: Sora (display) + Inter (body) + IBM Plex Mono (times, hours, output)
    ============================================================ */
 :root {
   --blue: #0d7bff;
@@ -27,6 +27,29 @@
   --p-orange: #dd9a3f;
   --p-purple: #9b82d4;
   --p-red: #d9595b;
+  --line: rgba(16, 32, 64, 0.1);
+  --line-strong: rgba(16, 32, 64, 0.18);
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /* type scale (outside the story mock) */
+  --t-12: 12px;
+  --t-14: 14px;
+  --t-16: 16px;
+  --t-18: 18px;
+  --t-24: 24px;
+  /* spacing scale */
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+  --s-9: 56px;
+  --s-10: 80px;
+  --s-11: 112px;
+  /* radii */
+  --r-sm: 10px;
+  --r-lg: 16px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --radius: 20px;
   --maxw: 1120px;
@@ -74,7 +97,6 @@ body {
   );
   top: -22vw;
   right: -18vw;
-  animation: breathe1 18s var(--ease) infinite alternate;
 }
 .field::after {
   width: 50vw;
@@ -86,17 +108,6 @@ body {
   );
   bottom: -20vw;
   left: -16vw;
-  animation: breathe2 22s var(--ease) infinite alternate;
-}
-@keyframes breathe1 {
-  to {
-    transform: translate(-6vw, 8vw) scale(1.12);
-  }
-}
-@keyframes breathe2 {
-  to {
-    transform: translate(7vw, -6vw) scale(1.18);
-  }
 }
 .wrap {
   position: relative;
@@ -234,242 +245,265 @@ body {
   color: var(--ink);
 }
 .nav-links a.nav-cta {
-  display: inline-block;
-  padding: 9px 17px;
-  border-radius: 11px;
-  background: linear-gradient(
-    270deg,
-    #0d7bff,
-    #6e77e8,
-    #9f8fff,
-    #c3b9ff,
-    #0d7bff
-  );
-  background-size: 300% 300%;
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-sm);
+  background: var(--blue);
   color: #fff;
   font-weight: 600;
-  font-size: 14px;
-  transform: translateY(0) scale(1);
-  box-shadow: 0 0px 0px rgba(13, 123, 255, 0);
-  filter: brightness(1);
+  font-size: var(--t-14);
   transition:
-    transform 0.35s var(--ease),
-    box-shadow 0.35s var(--ease),
-    filter 0.35s var(--ease),
-    background-position 0.75s var(--ease);
-  animation: ctaFlow 7s ease infinite;
-}
-@keyframes ctaFlow {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+    background-color 0.2s var(--ease),
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
 }
 .nav-links a.nav-cta:hover {
   color: #fff;
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 10px 26px rgba(13, 123, 255, 0.4);
-  filter: brightness(1.03);
+  background: var(--blue-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(13, 123, 255, 0.28);
+}
+.nav-links a.nav-cta:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
+}
+.brand:hover {
+  opacity: 0.8;
 }
 .nav-toggle {
   display: none;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: var(--r-sm);
   background: none;
   border: 0;
   color: var(--ink);
   cursor: pointer;
+  transition: background-color 0.2s var(--ease);
 }
-/* ---------- Hero (Act 1 — pinned) ---------- */
+.nav-toggle:hover {
+  background: rgba(16, 32, 64, 0.06);
+}
+/* ---------- Hero (Act 1 — split layout) ---------- */
 .hero {
-  height: 100vh;
-  height: 100svh;
+  min-height: 100vh;
+  min-height: 100svh;
   position: relative;
-  overflow: hidden;
-}
-.hero-inner {
-  height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 96px 28px 48px;
-  position: relative;
+  padding: 112px 0 var(--s-9);
 }
-.hero-badge {
-  display: inline-flex;
+.hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: var(--s-9);
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+}
+.hero-kicker {
+  font-size: var(--t-14);
   font-weight: 600;
-  letter-spacing: 0.03em;
   color: var(--blue-deep);
-  padding: 7px 15px;
-  border-radius: 100px;
-  background: rgba(13, 123, 255, 0.07);
-  border: 1px solid rgba(13, 123, 255, 0.16);
-  margin-bottom: 26px;
+  margin-bottom: var(--s-5);
 }
 .hero h1 {
   font-family: "Sora";
-  font-weight: 800;
-  font-size: clamp(52px, 8.4vw, 96px);
-  line-height: 1;
-  letter-spacing: -0.045em;
-  max-width: 900px;
-  margin: 0 auto 22px;
-}
-.hero h1 .shimmer {
-  background: linear-gradient(
-    110deg,
-    var(--blue) 20%,
-    var(--purple-deep) 45%,
-    var(--blue) 70%
-  );
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 5.5s linear infinite;
-}
-@keyframes shimmer {
-  to {
-    background-position: -220% 0;
-  }
+  font-weight: 700;
+  font-size: clamp(44px, 6.2vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  max-width: 11ch;
+  margin-bottom: var(--s-5);
 }
 .hero .lead {
-  font-size: 19.5px;
+  font-size: var(--t-18);
   color: var(--muted);
-  max-width: 580px;
-  margin: 0 auto 4px;
+  max-width: 34rem;
 }
-/* three-step "how it works" strip — builds itself in on load */
-.how-eyebrow {
-  margin-top: 34px;
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--blue);
-  opacity: 0;
-  transform: translateY(10px);
-  animation: howIn 0.7s var(--ease) 0.35s forwards;
-}
-.how-strip {
+.hero-actions {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 14px;
   flex-wrap: wrap;
-  margin-top: 18px;
+  gap: var(--s-3);
+  margin-top: var(--s-7);
 }
-.how-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 11px;
-  width: 132px;
-  opacity: 0;
-  transform: translateY(16px) scale(0.94);
-  animation: howIn 0.7s var(--ease) forwards;
-}
-.how-ico {
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(
-    135deg,
-    rgba(13, 123, 255, 0.12),
-    rgba(195, 185, 255, 0.3)
-  );
-  border: 1px solid rgba(13, 123, 255, 0.16);
-  color: var(--blue-deep);
-  box-shadow: 0 12px 30px rgba(13, 123, 255, 0.14);
-}
-.how-label {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink-soft);
-  line-height: 1.3;
-}
-.how-arrow {
+/* shared buttons */
+.btn {
   display: inline-flex;
   align-items: center;
-  margin-top: 16px;
-  opacity: 0;
-  transform: translateX(-8px);
-  animation: arrowIn 0.55s var(--ease) forwards;
+  gap: var(--s-2);
+  height: 48px;
+  padding: 0 var(--s-5);
+  border-radius: var(--r-sm);
+  font-family: "Inter", sans-serif;
+  font-size: var(--t-16);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    color 0.2s var(--ease),
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
 }
-/* build order: step → arrow → step → arrow → step */
-.how-step:nth-child(1) {
-  animation-delay: 0.55s;
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(13, 40, 90, 0.2);
 }
-.how-arrow:nth-child(2) {
-  animation-delay: 0.85s;
+.btn-primary:hover {
+  background: var(--blue-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(13, 123, 255, 0.28);
 }
-.how-step:nth-child(3) {
-  animation-delay: 1.05s;
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-strong);
 }
-.how-arrow:nth-child(4) {
-  animation-delay: 1.35s;
+.btn-ghost:hover {
+  border-color: var(--ink-soft);
+  background: rgba(16, 32, 64, 0.03);
 }
-.how-step:nth-child(5) {
-  animation-delay: 1.55s;
+.btn-ghost svg {
+  color: var(--blue);
 }
-@keyframes howIn {
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.btn:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
 }
-@keyframes arrowIn {
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+/* "next week" summary card — a teaser, not the full schedule (that's the story's payoff) */
+.week-card {
+  background: var(--card-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow:
+    0 1px 2px rgba(13, 40, 90, 0.06),
+    0 24px 60px rgba(13, 40, 90, 0.12);
+  padding: var(--s-6);
+}
+.week-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--line);
+}
+.week-card-title {
+  font-family: "Sora";
+  font-weight: 600;
+  font-size: var(--t-18);
+}
+.week-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-12);
+  font-weight: 600;
+  color: #1a8a52;
+}
+.week-card-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1a9e5c;
+}
+.week-rows {
+  list-style: none;
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-5) 0;
+}
+.week-rows li {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: var(--t-14);
+}
+.wd {
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--ink);
+}
+.wbar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--app-bg);
+  overflow: hidden;
+}
+.wbar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--blue);
+}
+.wn {
+  color: var(--muted);
+  font-size: var(--t-12);
+  white-space: nowrap;
+}
+.week-card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+  font-size: var(--t-12);
+  color: var(--muted);
+}
+.week-card-foot .mono {
+  color: var(--ink);
+  font-weight: 500;
+}
+/* numbered how-it-works row under the hero */
+.hero-steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-6);
+  margin-top: var(--s-10);
+  width: 100%;
+}
+.hero-steps li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line-strong);
+  font-size: var(--t-16);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.step-n {
+  font-family: var(--mono);
+  font-size: var(--t-14);
+  font-weight: 500;
+  color: var(--blue);
 }
 .scroll-hint {
   position: absolute;
-  bottom: 30px;
+  bottom: var(--s-5);
   left: 50%;
   transform: translateX(-50%);
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
   color: var(--muted-2);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   animation: hint 2.2s var(--ease) infinite;
 }
 @keyframes hint {
   0%,
   100% {
     transform: translate(-50%, 0);
-    opacity: 0.7;
+    opacity: 0.6;
   }
   50% {
     transform: translate(-50%, 6px);
     opacity: 1;
-  }
-}
-.rise {
-  opacity: 0;
-  transform: translateY(26px);
-  animation: rise 0.9s var(--ease) forwards;
-}
-@keyframes rise {
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 /* ---------- App window chrome ---------- */
@@ -843,26 +877,23 @@ body {
   position: relative;
 }
 .story-head {
-  max-width: 620px;
-  margin: 0 auto;
-  padding: 96px 28px 34px;
-  text-align: center;
+  padding-top: var(--s-8);
+  padding-bottom: var(--s-7);
 }
-.tag {
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--blue);
-  margin-bottom: 12px;
+.kicker {
+  font-size: var(--t-14);
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: var(--s-3);
 }
 .story-head h2,
 .section-head h2 {
   font-family: "Sora";
   font-weight: 700;
-  font-size: clamp(30px, 4.2vw, 46px);
+  font-size: clamp(32px, 4.2vw, 48px);
   line-height: 1.08;
   letter-spacing: -0.03em;
+  max-width: 18ch;
 }
 .stage-pin {
   position: relative;
@@ -1328,94 +1359,149 @@ body {
   transform: scale(0);
   will-change: transform;
 }
-/* ---------- Act 4 — Under the hood ---------- */
+/* ---------- Act 4 — Under the hood (feature rows) ---------- */
 .section {
-  padding: 96px 0 110px;
+  padding: var(--s-10) 0 var(--s-11);
   position: relative;
 }
 .section-head {
-  max-width: 620px;
-  margin: 0 auto 56px;
-  text-align: center;
+  max-width: 640px;
+  margin: 0 0 var(--s-9);
 }
 .reveal {
   opacity: 0;
-  transform: translateY(36px);
+  transform: translateY(24px);
   transition:
-    opacity 0.85s var(--ease),
-    transform 0.85s var(--ease);
+    opacity 0.8s var(--ease),
+    transform 0.8s var(--ease);
 }
 .reveal.in {
   opacity: 1;
   transform: translateY(0);
 }
-.trio {
+.feature-list {
+  border-top: 1px solid var(--line);
+}
+.feature {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-8);
+  align-items: center;
+  padding: var(--s-8) 0;
+  border-bottom: 1px solid var(--line);
 }
-.trio-card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  padding: 28px;
-}
-.trio-card {
-  position: relative;
-}
-/* float is applied to the card itself once revealed. will-change promotes each card to its
-   own compositor layer so its backdrop-blur is composited once and merely transformed each
-   frame, instead of the 14px blur being re-sampled on every step (the source of the stutter) */
-.trio-card.in.f1,
-.trio-card.in.f2,
-.trio-card.in.f3 {
-  will-change: transform;
-}
-.trio-card.in.f1 {
-  animation: floaty 6s ease-in-out 0.9s infinite;
-}
-.trio-card.in.f2 {
-  animation: floaty 7s ease-in-out 1.4s infinite;
-}
-.trio-card.in.f3 {
-  animation: floaty 6.5s ease-in-out 1.9s infinite;
-}
-@keyframes floaty {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-7px);
-  }
-}
-.trio-ico {
-  width: 44px;
-  height: 44px;
-  border-radius: 13px;
+.feature-copy {
   display: grid;
-  place-items: center;
-  background: linear-gradient(
-    135deg,
-    rgba(13, 123, 255, 0.1),
-    rgba(195, 185, 255, 0.2)
-  );
-  border: 1px solid rgba(13, 123, 255, 0.14);
-  margin-bottom: 18px;
-  color: var(--blue-deep);
+  grid-template-columns: 48px 1fr;
+  column-gap: var(--s-4);
+  align-items: baseline;
 }
-.trio-card h3 {
+.feature-n {
+  grid-row: span 2;
+  font-family: var(--mono);
+  font-size: var(--t-14);
+  font-weight: 500;
+  color: var(--blue);
+}
+.feature h3 {
   font-family: "Sora";
   font-weight: 600;
-  font-size: 17.5px;
-  margin-bottom: 8px;
-  letter-spacing: -0.01em;
+  font-size: var(--t-24);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: var(--s-2);
 }
-.trio-card p {
-  font-size: 14.5px;
+.feature p {
+  grid-column: 2;
+  font-size: var(--t-16);
   color: var(--muted);
+  max-width: 46ch;
+}
+.feature-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 168px;
+  padding: var(--s-6);
+  border-radius: var(--r-lg);
+  background: var(--card-solid);
+  border: 1px solid var(--line);
+}
+.mono {
+  font-family: var(--mono);
+}
+/* PIN demo */
+.demo-pin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.demo-label {
+  font-size: var(--t-12);
+  font-weight: 600;
+  color: var(--muted);
+}
+.pin-boxes {
+  display: flex;
+  gap: var(--s-2);
+}
+.pin-boxes span {
+  width: 48px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-strong);
+  font-family: var(--mono);
+  font-size: var(--t-24);
+  color: var(--ink);
+  background: var(--bg);
+}
+.pin-boxes .pin-live {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(13, 123, 255, 0.16);
+}
+/* calendar demo — reuses .cal-chip from the story's booking overlay */
+.demo-cal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: min(280px, 100%);
+}
+.demo-cal .cal-chip {
+  position: static;
+  padding: var(--s-2) var(--s-3);
+}
+.demo-cal .cal-chip span {
+  font-size: var(--t-12);
+}
+.demo-demand {
+  margin-top: var(--s-2);
+  font-size: var(--t-14);
+  color: var(--ink-soft);
+}
+.demo-demand .mono {
+  color: var(--blue-deep);
+  font-weight: 500;
+}
+/* copy demo */
+.demo-copy {
+  font-family: var(--mono);
+  font-size: var(--t-14);
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0;
+  padding: var(--s-4) var(--s-5);
+  border-left: 3px solid var(--blue);
+  background: var(--bg);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+/* 04 — the maker note reads as a statement, no demo panel */
+.feature-maker {
+  grid-template-columns: minmax(0, 1fr);
+}
+.feature-maker p {
+  max-width: 60ch;
 }
 /* ---------- Act 5 — flowing dark CTA + dark footer ---------- */
 .cta-flow {
@@ -1683,7 +1769,7 @@ body {
   margin-bottom: 16px;
 }
 .cta-sub { color: rgba(255,255,255,0.75); font-size: 17px; max-width: 480px; margin: 0 auto 34px; }
-.cta-sub-phase2 { color: rgba(255,255,255,0.75); font-size: 17px; max-width: 480px; margin: 0 auto 34px; visibility: hidden;} /*hidden until phase 2 and I start charging*/
+.cta-sub-phase2 { color: rgba(255,255,255,0.75); font-size: 17px; max-width: 480px; margin: 0 auto 34px; display: none;} /*hidden until phase 2 and I start charging*/
 .email-form { display: flex; gap: 10px; max-width: 460px; margin: 0 auto; flex-wrap: wrap; justify-content: center; }
 /* wrapper carries the cursor-following border glow (inputs can't have ::before) */
 .email-field {
@@ -1847,8 +1933,19 @@ body {
 }
 /* ---------- Responsive ---------- */
 @media (max-width: 920px) {
-  .trio {
+  .hero-inner {
     grid-template-columns: 1fr;
+    gap: var(--s-8);
+  }
+  .week-card {
+    max-width: 520px;
+  }
+  .hero-steps {
+    margin-top: var(--s-9);
+  }
+  .feature {
+    grid-template-columns: 1fr;
+    gap: var(--s-6);
   }
   .cols {
     grid-template-columns: repeat(5, minmax(96px, 1fr));
@@ -1874,29 +1971,39 @@ body {
     box-shadow: 0 20px 60px rgba(13, 40, 90, 0.15);
   }
   .nav-toggle {
-    display: block;
+    display: grid;
   }
   .container {
-    padding: 0 20px;
+    padding: 0 16px;
   }
-  .how-strip {
-    gap: 8px;
-    margin-top: 32px;
+  .hero {
+    padding-top: 96px;
   }
-  .how-arrow {
+  .hero-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+  .hero-steps {
+    grid-template-columns: 1fr;
+    gap: var(--s-3);
+  }
+  .week-card {
+    padding: var(--s-5);
+  }
+  .wn {
+    font-size: 11px;
+  }
+  .scroll-hint {
     display: none;
   }
-  .how-step {
-    width: 96px;
-    gap: 8px;
+  .section {
+    padding: var(--s-9) 0 var(--s-10);
   }
-  .how-ico {
-    width: 46px;
-    height: 46px;
-    border-radius: 13px;
+  .feature-copy {
+    grid-template-columns: 36px 1fr;
   }
-  .how-label {
-    font-size: 12px;
+  .feature h3 {
+    font-size: 20px;
   }
   .people {
     gap: 14px;
@@ -1925,13 +2032,6 @@ body {
 /* ---------- Static fallback (reduced motion / no GSAP) ---------- */
 body.no-anim .scroll-hint {
   display: none;
-}
-body.no-anim .hero {
-  height: auto;
-  padding-bottom: 60px;
-}
-body.no-anim .hero-inner {
-  height: auto;
 }
 body.no-anim .stage-pin {
   height: auto;
@@ -1966,6 +2066,7 @@ body.no-anim .sched-layer {
 }
 body.no-anim .sched-window {
   margin: 0 auto;
+  width: 100%;
   max-width: 886px;
 }
 body.no-anim .glow-ring {
@@ -1990,16 +2091,24 @@ body.no-anim .reveal {
   transform: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .field::before,
-  .field::after,
-  .shimmer,
   .scroll-hint,
   .blob,
   .glow-ring::before,
-  .trio-card.in,
-  .nav-cta,
   .cta-lead {
     animation: none !important;
+  }
+  .cursor-glow,
+  .email-field::before {
+    display: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .btn,
+  .nav-links a.nav-cta {
+    transition: none;
   }
   .flow-bg::before,
   .flow-bg::after {
@@ -2008,20 +2117,22 @@ body.no-anim .reveal {
   .stage.vibrate .bubble .bubble-inner {
     animation: none !important;
   }
-  .how-eyebrow,
-  .how-step,
-  .how-arrow {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
 }
 a:focus-visible,
 button:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 3px;
-  border-radius: 6px;
+}
+/* on the dark CTA band the blue ring disappears — switch to white */
+.cta-flow a:focus-visible,
+.cta-flow button:focus-visible,
+.cta-flow input:focus-visible {
+  outline-color: #fff;
+}
+.email-input:focus-visible {
+  outline-offset: 2px;
+  border-color: rgba(255, 255, 255, 0.7);
 }
 
 /* ---------- Visually hidden (screen-reader + crawler text) ---------- */
