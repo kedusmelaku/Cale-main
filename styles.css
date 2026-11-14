@@ -1089,40 +1089,6 @@ body {
 }
 .hs-lines .ln {
   display: block;
-  margin: 0 -6px;
-  padding: 0 6px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    opacity 0.2s ease;
-}
-.hs-lines.hl .ln {
-  opacity: 0.4;
-}
-.hs-lines.hl .ln.match {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.2);
-}
-.hs-lines.hl .ln-h {
-  opacity: 0.55;
-}
-.hs-sum {
-  font-size: 11px;
-  font-weight: 600;
-  color: #fff;
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition:
-    max-height 0.3s var(--ease),
-    opacity 0.2s ease,
-    margin 0.3s var(--ease);
-}
-.hs-sum.on {
-  max-height: 24px;
-  opacity: 1;
-  margin-top: 8px;
 }
 .hs-reacts {
   display: flex;
@@ -2610,6 +2576,18 @@ body {
   align-items: center;
   justify-content: center;
   padding: 100px 28px;
+}
+/* drifting shift blocks that assemble into a week (drawn by JS) */
+.cta-sky {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  height: 100%;
+  margin-left: -50vw;
+  z-index: -1;
+  pointer-events: none;
 }
 .cta-content h2 {
   font-family: "Sora";

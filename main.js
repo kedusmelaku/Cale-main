@@ -221,7 +221,7 @@
     const app = $('#heroApp'), form = $('#heroForm'), chat = $('#heroChat');
     const cards = { app, form, chat };
     const colsEl = $('#heroCols');
-    const linesEl = $('#hcLines'), sumEl = $('#hcSum');
+    const linesEl = $('#hcLines');
     const bubble = $('.hs-bubble', chat);
 
     /* same formatting helpers as Cale-App (utils.js) */
@@ -289,24 +289,15 @@
         $('.blk-time', el).textContent = `${clock(sh.s)}–${clock(sh.e)}`;
       });
     }
-    /* the exact clipboard format Cale-App produces (buildClipboardText) */
-    function hoursText() {
-      return model.map((d) => {
-        const vis = d.shifts.filter((s) => !s.gone);
-        if (!vis.length) return '';
-        return `Hours for ${d.name} (${d.dt}):\n${vis.map((s) => `${s.n}: ${clock(s.s)}-${clock(s.e)}`).join('\n')}\n`;
-      }).filter(Boolean).join('\n');
-    }
     function renderLines() {
       const out = [];
       model.forEach((d) => {
         const vis = d.shifts.filter((s) => !s.gone);
         if (!vis.length) return;
         out.push(`<span class="ln-h">Hours for ${d.name} (${d.dt}):</span>`);
-        vis.forEach((s) => out.push(`<span class="ln" data-n="${s.n}" data-h="${(s.e - s.s) / 60}">${s.n}: ${clock(s.s)}-${clock(s.e)}</span>`));
+        vis.forEach((s) => out.push(`<span class="ln" data-n="${s.n}">${s.n}: ${clock(s.s)}-${clock(s.e)}</span>`));
       });
       linesEl.innerHTML = out.join('');
-      highlight(null);
     }
 
     /* ----- focus management ----- */
@@ -325,7 +316,7 @@
       focus = k;
       if (k) stage.dataset.focus = k; else delete stage.dataset.focus;
       Object.entries(cards).forEach(([name, el]) => el.classList.toggle('is-focus', name === k));
-      if (k !== 'chat') { closeTray(); pinned = null; highlight(null); }
+      if (k !== 'chat') closeTray();
       holdHero(600);
     }
     function maybeLeave() {
@@ -614,8 +605,7 @@
     const copyBtn = $('#hsCopy');
     let copyTimer = 0;
     copyBtn.addEventListener('click', () => {
-      const text = hoursText();
-      try { navigator.clipboard?.writeText(text).catch(() => {}); } catch (err) { /* clipboard is a bonus */ }
+      /* demo only: nothing is written to the visitor's clipboard */
       clearTimeout(copyTimer);
       copyBtn.classList.add('copied');
       $('.hs-copy-label', copyBtn).textContent = 'Copied ✓';
@@ -637,28 +627,7 @@
       });
     });
 
-    /* ----- 03: find someone's shifts, react to the post ----- */
-    let pinned = null;
-    function highlight(n) {
-      linesEl.classList.toggle('hl', !!n);
-      let count = 0, hours = 0;
-      $$('.ln', linesEl).forEach((l) => {
-        const m = l.dataset.n === n;
-        l.classList.toggle('match', m);
-        if (m) { count++; hours += +l.dataset.h; }
-      });
-      sumEl.textContent = n ? `${n}: ${count} shift${count === 1 ? '' : 's'} · ${hours}h this week` : '';
-      sumEl.classList.toggle('on', !!n);
-    }
-    linesEl.addEventListener('pointerover', (e) => { const ln = e.target.closest('.ln'); if (ln && !pinned) highlight(ln.dataset.n); });
-    linesEl.addEventListener('pointerleave', () => { if (!pinned) highlight(null); });
-    linesEl.addEventListener('click', (e) => {
-      const ln = e.target.closest('.ln');
-      if (!ln) return;
-      pinned = pinned === ln.dataset.n ? null : ln.dataset.n;
-      highlight(pinned);
-    });
-
+    /* ----- 03: react to the post ----- */
     const tray = $('#hcTray'), addBtn = $('#hcAdd');
     function closeTray() { tray.classList.remove('open'); addBtn.setAttribute('aria-expanded', 'false'); }
     addBtn.addEventListener('click', () => {
@@ -780,10 +749,12 @@
       form.hidden = true;
       errBox.hidden = true;
       $('#formSuccess').hidden = false;
+      document.dispatchEvent(new CustomEvent('cale:joined'));
     } catch {
       btn.disabled = false;
       btn.textContent = 'Try again';
       errBox.hidden = false;
+      document.dispatchEvent(new CustomEvent('cale:join-failed'));
     }
   });
 
@@ -798,6 +769,214 @@
       field.style.setProperty('--glow', '1');
     });
     field.addEventListener('mouseleave', () => field.style.setProperty('--glow', '0'));
+  })();
+
+  /* ---------------- CTA: the week assembles, then the weekend frees up ----------------
+     Loose shift blocks drift through the night sky (the scramble). Moving toward the form,
+     focusing it and typing an email pulls them into place one by one, Monday first, until a
+     valid address completes the week. A successful request pulses the weekdays and sends
+     Saturday and Sunday off into the sky as stars: the weekend, reclaimed. */
+  (() => {
+    const canvas = $('#ctaSky');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const section = $('.cta-flow');
+    const content = $('.cta-content');
+    const head = $('.cta-content h2');
+    const formEl = $('#accessForm');
+    const input = $('.email-input');
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const ROWS = [4, 4, 3, 4, 3, 2, 2];   /* blocks per day */
+    const COLORS = ['#5b8fff', '#7d86f0', '#9f8fff', '#c3b9ff'];
+    let W = 0, H = 0, dpr = 1, scale = 1, grid = null;
+    let order = 0, joined = 0, failDip = 0;   /* 0..1 values, eased each frame */
+    const pointer = { x: -1e4, y: -1e4, active: false };
+
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const blocks = [];
+    ROWS.forEach((n, d) => { for (let r = 0; r < n; r++) blocks.push({ d, r }); });
+    blocks.forEach((b, i) => {
+      b.thr = (i + 1) / (blocks.length + 1);   /* Monday's blocks join first */
+      b.color = COLORS[(b.d + b.r) % COLORS.length];
+      b.seed = Math.random() * 1000;
+      b.vx = 0; b.vy = 0; b.rot = rnd(-0.8, 0.8); b.flash = 0; b.landed = false; b.gone = false; b.alpha = 1;
+    });
+    const dust = Array.from({ length: 70 }, () => ({ seed: Math.random() * 1000, r: rnd(0.6, 1.8), tw: rnd(0, 6.28) }));
+
+    function layout() {
+      const r = canvas.getBoundingClientRect();   /* CSS sizes it: full width, full section height */
+      dpr = Math.min(2, devicePixelRatio || 1);
+      W = r.width; H = r.height;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      scale = W < 520 ? 0.78 : 1;
+      const bw = 42 * scale, bh = 13 * scale, gx = 12 * scale, gy = 8 * scale, label = 22 * scale;
+      const gw = 7 * bw + 6 * gx, gh = label + 4 * (bh + gy);
+      /* the week builds in the open sky below the form; measured while the form is showing,
+         and kept in place after it's swapped for the success line */
+      if (!formEl.hidden || !grid) {
+        const fr = formEl.getBoundingClientRect();
+        const top = fr.bottom - r.top + 56 * scale;
+        grid = top + gh < H - 16 ? { x: (W - gw) / 2, y: top, bw, bh, gx, gy, label, gw, gh } : null;
+      } else {
+        grid.x = (W - grid.gw) / 2;
+      }
+      blocks.forEach((b) => {
+        if (grid) { b.sx = grid.x + b.d * (bw + gx); b.sy = grid.y + label + b.r * (bh + gy); }
+        if (b.x === undefined) { b.x = rnd(0, W); b.y = rnd(0, H); }
+      });
+      dust.forEach((p) => { if (p.x === undefined) { p.x = rnd(0, W); p.y = rnd(0, H); } });
+    }
+
+    function targetOrder() {
+      if (joined) return 1;
+      const v = input.value.trim();
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return 1;
+      let o = 0;
+      if (pointer.active) {
+        const fr = formEl.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
+        const fx = fr.left - cr.left + fr.width / 2, fy = fr.top - cr.top + fr.height / 2;
+        o += Math.max(0, 1 - Math.hypot(pointer.x - fx, pointer.y - fy) / 380) * 0.26;
+      }
+      if (document.activeElement === input) o += 0.16;
+      o += Math.min(0.5, v.length * 0.035);
+      return Math.min(0.94, o) - failDip * 0.5;
+    }
+
+    function step(t) {
+      order += (targetOrder() - order) * 0.06;
+      failDip *= 0.97;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      /* stars */
+      dust.forEach((p) => {
+        const s = p.seed;
+        p.x += Math.sin(t * 0.00011 + s) * 0.08; p.y += Math.cos(t * 0.00013 + s * 1.3) * 0.06;
+        repel(p, 90, 0.9);
+        if (p.x < -5) p.x = W + 5; if (p.x > W + 5) p.x = -5; if (p.y < -5) p.y = H + 5; if (p.y > H + 5) p.y = -5;
+        const a = 0.35 + 0.35 * Math.sin(t * 0.0018 + p.tw);
+        ctx.fillStyle = `rgba(226, 222, 255, ${a})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
+      });
+
+      /* day letters fade in as the week takes shape; the weekend glows once it's free */
+      if (grid) {
+        ctx.font = `600 ${12 * scale}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        DAYS.forEach((l, d) => {
+          const weekend = d >= 5;
+          const free = weekend && joined;
+          const a = Math.min(1, order * 1.4) * (free ? 1 : 0.55);
+          ctx.save();
+          if (free) { ctx.shadowColor = 'rgba(195, 185, 255, 0.95)'; ctx.shadowBlur = 10 + 6 * Math.sin(t * 0.004); }
+          ctx.fillStyle = free ? `rgba(225, 219, 255, ${a})` : `rgba(255, 255, 255, ${a})`;
+          ctx.fillText(l, grid.x + d * (grid.bw + grid.gx) + grid.bw / 2, grid.y + 12 * scale);
+          ctx.restore();
+        });
+      }
+
+      /* shift blocks */
+      blocks.forEach((b, i) => {
+        if (b.gone) return;
+        const placed = grid && order >= b.thr;
+        if (b.leaving) {
+          b.vy -= 0.06; b.vx *= 0.99; b.alpha -= 0.012; b.rot += b.vr;
+          if (b.alpha <= 0) {
+            b.gone = true;
+            for (let k = 0; k < 4; k++) dust.push({ x: b.x + rnd(-10, 10), y: b.y + rnd(-6, 6), seed: Math.random() * 1000, r: rnd(1, 2.2), tw: rnd(0, 6.28) });
+          }
+        } else if (placed) {
+          b.vx += (b.sx - b.x) * 0.02; b.vy += (b.sy - b.y) * 0.02;
+          b.vx *= 0.8; b.vy *= 0.8;
+          b.rot *= 0.86;
+          if (!b.landed && Math.hypot(b.sx - b.x, b.sy - b.y) < 1.5) { b.landed = true; b.flash = 1; }
+        } else {
+          b.landed = false;
+          const s = b.seed;
+          const wx = W * (0.5 + 0.42 * Math.sin(t * 0.00007 + s)), wy = H * (0.5 + 0.4 * Math.cos(t * 0.00006 + s * 1.7));
+          b.vx += (wx - b.x) * 0.00004 + Math.sin(t * 0.0009 + s) * 0.012;
+          b.vy += (wy - b.y) * 0.00004 + Math.cos(t * 0.0008 + s) * 0.012;
+          b.vx *= 0.985; b.vy *= 0.985;
+          b.rot += Math.sin(t * 0.0005 + s) * 0.004;
+          repel(b, 130, 1.4);
+        }
+        b.x += b.vx; b.y += b.vy;
+        b.flash *= 0.93;
+
+        const bw = grid ? grid.bw : 30, bh = grid ? grid.bh : 10;
+        const pulse = joined && !b.leaving ? 0.5 + 0.5 * Math.sin(t * 0.004 - b.d * 0.6) : 0;
+        ctx.save();
+        ctx.translate(b.x + bw / 2, b.y + bh / 2);
+        ctx.rotate(b.rot);
+        ctx.globalAlpha = Math.max(0, b.alpha) * (placed || b.leaving ? 0.95 : 0.62);
+        ctx.shadowColor = 'rgba(159, 143, 255, 0.9)';
+        ctx.shadowBlur = 6 + b.flash * 18 + pulse * 14;
+        ctx.fillStyle = b.color;
+        roundRect(-bw / 2, -bh / 2, bw, bh, 3 * scale);
+        ctx.fill();
+        ctx.restore();
+        /* a soft ring where a block clicks into place */
+        if (b.flash > 0.05 && !b.leaving) {
+          ctx.strokeStyle = `rgba(195, 185, 255, ${b.flash * (joined ? 0.25 : 0.5)})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(b.sx + bw / 2, b.sy + bh / 2, (1 - b.flash) * 14 + 3, 0, 6.283); ctx.stroke();
+        }
+      });
+    }
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    function repel(p, radius, strength) {
+      if (!pointer.active) return;
+      const dx = p.x - pointer.x, dy = p.y - pointer.y, d = Math.hypot(dx, dy);
+      if (d > radius || d < 0.1) return;
+      const f = (1 - d / radius) * strength;
+      if ('vx' in p) { p.vx += (dx / d) * f * 0.35; p.vy += (dy / d) * f * 0.35; } else { p.x += (dx / d) * f; p.y += (dy / d) * f; }
+    }
+
+    /* the payoff */
+    function reclaimWeekend() {
+      joined = 1;
+      setTimeout(() => {
+        blocks.filter((b) => b.d >= 5).forEach((b, k) => {
+          setTimeout(() => { b.leaving = true; b.vx = rnd(-0.6, 0.6); b.vy = rnd(-1.2, -0.4); b.vr = rnd(-0.03, 0.03); }, k * 140);
+        });
+      }, 1100);
+      if (still) { blocks.forEach((b) => { if (b.d >= 5) b.gone = true; }); drawStill(); }
+    }
+    document.addEventListener('cale:joined', reclaimWeekend);
+    document.addEventListener('cale:join-failed', () => { failDip = 1; });
+
+    /* input + pointer */
+    section.addEventListener('pointermove', (e) => {
+      const r = canvas.getBoundingClientRect();
+      pointer.x = e.clientX - r.left; pointer.y = e.clientY - r.top; pointer.active = true;
+    }, { passive: true });
+    section.addEventListener('pointerleave', () => { pointer.active = false; });
+
+    /* run only while the section is on screen */
+    let running = false, visible = false, raf = 0;
+    function loop(t) { step(t); raf = requestAnimationFrame(loop); }
+    function sync() {
+      const go = visible && !document.hidden && !still;
+      if (go && !running) { running = true; raf = requestAnimationFrame(loop); }
+      if (!go && running) { running = false; cancelAnimationFrame(raf); }
+    }
+    function drawStill() {
+      /* reduced motion: the finished week, no drifting */
+      order = 1;
+      blocks.forEach((b) => { if (grid) { b.x = b.sx; b.y = b.sy; b.rot = 0; b.landed = true; b.flash = 0; } });
+      step(0);
+    }
+    new IntersectionObserver(([en]) => { visible = en.isIntersecting; sync(); }).observe(section);
+    document.addEventListener('visibilitychange', sync);
+    new ResizeObserver(() => { layout(); if (still) drawStill(); }).observe(content);
+    layout();
+    if (still) drawStill();
   })();
 
   /* ---------------- auto-scroll guided tour ---------------- */
