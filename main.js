@@ -318,41 +318,56 @@
       Object.entries(cards).forEach(([name, el]) => el.classList.toggle('is-focus', name === k));
       if (k !== 'chat') closeTray();
       holdHero(600);
-      shuffleTo(k === 'app');
+      restack(k);
     }
 
-    /* 02 overlaps 01 and 03, and stacking order flips instantly, so 02 never just pops in
-       front of (or behind) them. Instead the side cards slide outward until they clear 02,
-       the order flips while they're apart, and they glide back: a card-shuffle. Requests
-       that arrive mid-shuffle are queued, so quick hovers can't make it stutter. */
-    let appFront = false, shuffling = false, wantFront = false;
-    const SHUFFLE_MS = 520, SWAP_AT = 0.45;
-    function shuffleTo(front) {
-      wantFront = front;
-      if (shuffling || front === appFront) return;
-      if (!motionOK) { appFront = front; stage.classList.toggle('app-front', front); return; }
-      shuffling = true;
-      const ar = app.getBoundingClientRect(), fr = form.getBoundingClientRect(), cr = chat.getBoundingClientRect();
-      /* how far each must move to stop overlapping; when 02 drops back the side cards are also
-         gliding home from their "02 focused" offset (inward ~30-40px), so they go further */
-      const margin = front ? 18 : 96;
-      const clearForm = Math.max(0, fr.right - ar.left) + margin;
-      const clearChat = Math.max(0, ar.right - cr.left) + margin;
-      const ease = 'cubic-bezier(0.45, 0, 0.2, 1)';
-      const slide = (el, dx) => el.animate(
-        [{ translate: '0 0' }, { translate: `${dx}px 0`, offset: SWAP_AT }, { translate: '0 0' }],
-        { duration: SHUFFLE_MS, easing: ease, composite: 'add' },
+    /* 02 overlaps 01 and 03, and stacking order flips instantly, so a side card never just
+       pops in front of (or behind) 02. It slides outward until it clears 02, flips while
+       apart (.below-app), and glides back. Each side card does this on its own clock: the
+       card you're pointing at moves quickly, while the other one drifts in front of 02 more
+       slowly so it doesn't compete for attention. Requests that arrive mid-move are queued
+       per card, so quick hovers can't make it stutter. */
+    const FAST = { ms: 520, at: 0.45, ease: 'cubic-bezier(0.45, 0, 0.2, 1)' };
+    const DRIFT = { ms: 1150, at: 0.5, ease: 'cubic-bezier(0.35, 0, 0.25, 1)' };
+    const sideState = new Map([form, chat].map((el) => [el, { below: false, busy: false, want: false, pace: FAST }]));
+    function restack(k) {
+      const below = k === 'app';
+      [[form, 'form'], [chat, 'chat']].forEach(([el, name]) => {
+        /* the other side card (when 01 or 03 is the one being hovered) drifts slowly */
+        const pace = (k === 'form' || k === 'chat') && k !== name ? DRIFT : FAST;
+        moveSide(el, below, pace);
+      });
+    }
+    function syncAppClear() {
+      const allBehind = [...sideState.values()].every((st) => st.below);
+      stage.classList.toggle('app-clear', allBehind);
+    }
+    function moveSide(el, below, pace) {
+      const st = sideState.get(el);
+      st.want = below; st.pace = pace;
+      if (st.busy || st.below === below) return;
+      if (!below) stage.classList.remove('app-clear');   /* about to come forward: 02 back to its normal layer */
+      if (!motionOK) { st.below = below; el.classList.toggle('below-app', below); syncAppClear(); return; }
+      st.busy = true;
+      const ar = app.getBoundingClientRect(), r = el.getBoundingClientRect();
+      /* how far it must move to stop overlapping 02; coming forward it is also gliding home
+         from its "02 focused" offset (inward ~30-40px), so it goes further */
+      const margin = below ? 18 : pace === DRIFT ? 130 : 96;
+      const isForm = el === form;
+      const dist = (isForm ? Math.max(0, r.right - ar.left) : Math.max(0, ar.right - r.left)) + margin;
+      el.animate(
+        [{ translate: '0 0' }, { translate: `${isForm ? -dist : dist}px 0`, offset: pace.at }, { translate: '0 0' }],
+        { duration: pace.ms, easing: pace.ease, composite: 'add' },
       );
-      slide(form, -clearForm);
-      slide(chat, clearChat);
       setTimeout(() => {
-        appFront = front;
-        stage.classList.toggle('app-front', front);
-      }, SHUFFLE_MS * SWAP_AT);
+        st.below = below;
+        el.classList.toggle('below-app', below);
+        syncAppClear();
+      }, pace.ms * pace.at);
       setTimeout(() => {
-        shuffling = false;
-        if (wantFront !== appFront) shuffleTo(wantFront);
-      }, SHUFFLE_MS);
+        st.busy = false;
+        if (st.want !== st.below) moveSide(el, st.want, st.pace);
+      }, pace.ms);
     }
     function maybeLeave() {
       clearTimeout(leaveTimer);

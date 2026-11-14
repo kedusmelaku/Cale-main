@@ -454,24 +454,37 @@ body {
   bottom: 0;
   height: 110px;
   background: linear-gradient(rgba(250, 251, 255, 0), var(--bg) 85%);
-  z-index: 4;
+  z-index: 5;
   pointer-events: none;
 }
 /* shared card behaviour. Stacking order can't animate, so cards never swap order while
-   they overlap: 01 and 03 sit side by side and never touch, and when 02 changes places
-   with them JS slides them clear first and flips the order (.app-front) while apart. */
+   they overlap. 01 and 03 sit side by side and never touch; each of them has its own
+   place relative to 02 (.below-app), and JS slides a card clear of 02 before flipping it.
+   Layers: below-app card 1 · 02 3 · side card 4 · fade 5 · focused side card 6 ·
+   02 once both side cards are behind it (.app-clear) 7. */
 .hs-card {
   position: absolute;
   transition:
     transform 0.5s var(--ease),
     filter 0.35s ease;
 }
-.hs-form.is-focus,
-.hs-chat.is-focus {
-  z-index: 5;   /* above the fade overlay; still below 02 when 02 is in front */
+.hs-app {
+  z-index: 3;
 }
-.hero-stage.app-front .hs-app {
+.hs-form,
+.hs-chat {
+  z-index: 4;
+}
+.hs-form.below-app,
+.hs-chat.below-app {
+  z-index: 1;
+}
+.hs-form.is-focus:not(.below-app),
+.hs-chat.is-focus:not(.below-app) {
   z-index: 6;
+}
+.hero-stage.app-clear .hs-app {
+  z-index: 7;
 }
 .hero-stage[data-focus] .hs-card:not(.is-focus) {
   filter: brightness(0.62) saturate(0.75);
@@ -648,7 +661,6 @@ body {
   top: 34px;
   width: 880px;
   margin-left: -440px;
-  z-index: 1;
   background: var(--app-bg);
   border: 1px solid rgba(16, 32, 64, 0.12);
   border-radius: 16px;
@@ -890,7 +902,6 @@ body {
   box-shadow: 0 30px 70px rgba(13, 40, 90, 0.2);
   text-align: left;
   line-height: 1.4;
-  z-index: 2;
   transform: rotate(-3deg);
   animation: hsSlideL 0.9s var(--ease) 0.4s backwards;
 }
@@ -1035,7 +1046,6 @@ body {
   top: 110px;
   width: 270px;
   text-align: left;
-  z-index: 2;
   transform: rotate(2.5deg);
   animation: hsSlideR 0.9s var(--ease) 2s backwards;
 }
