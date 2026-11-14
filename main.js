@@ -203,6 +203,11 @@
 
   /* ---------------- render static DOM ---------------- */
   $('#storySched').innerHTML = schedHTML();
+  /* hero animations report here so the guided tour never starts scrolling mid-animation */
+  const heroAnim = { flights: 0, until: performance.now() + 3400 };   /* entrance runs ~3.3s */
+  const heroBusy = () => heroAnim.flights > 0 || performance.now() < heroAnim.until;
+  const holdHero = (ms) => { heroAnim.until = Math.max(heroAnim.until, performance.now() + ms); };
+
   /* ---------------- hero collage: three interactive cards ----------------
      01 form → 02 schedule → 03 group chat share one schedule model. Submitting the form
      flies Sam's availability into the schedule; Copy to Clipboard flies the current hours
@@ -217,6 +222,14 @@
     const colsEl = $('#heroCols');
     const linesEl = $('#hcLines'), sumEl = $('#hcSum');
     const bubble = $('.hs-bubble', chat);
+    const phoneMQ = matchMedia('(max-width: 620px)');
+    const isPhone = () => phoneMQ.matches;
+    const HINTS = {
+      form: 'Tick days, set times, then submit.',
+      app: 'Drag a shift, or drag its top or bottom edge.',
+      chat: 'Tap a name to see their shifts.',
+    };
+    let order = ['form', 'app', 'chat'];   /* most recently focused first (the phone deck) */
 
     /* same formatting helpers as Cale-App (utils.js) */
     const clock = (m) => { const h = Math.floor(m / 60), mm = m % 60, dh = h % 12 || 12; return mm ? `${dh}:${String(mm).padStart(2, '0')}` : String(dh); };
@@ -315,14 +328,58 @@
     };
     function setFocus(k) {
       clearTimeout(leaveTimer);
+      if (!k && isPhone()) return;   /* the phone deck always has a card on top */
       if (focus === k) return;
       focus = k;
       if (k) stage.dataset.focus = k; else delete stage.dataset.focus;
       Object.entries(cards).forEach(([name, el]) => el.classList.toggle('is-focus', name === k));
       if (k !== 'chat') { closeTray(); pinned = null; highlight(null); }
+      if (k) order = [k, ...order.filter((x) => x !== k)];
+      order.forEach((name, i) => { cards[name].dataset.depth = i; });
+      $$('.hs-steps button', stage).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.go === k)));
+      $('#hsHint').textContent = k ? HINTS[k] : '';
+      holdHero(600);
+      fitPhone();
     }
+    /* phones: scale the scheduler to the screen and size the stage to the top card */
+    function fitPhone() {
+      if (!isPhone()) {
+        app.style.zoom = '';
+        app.style.removeProperty('--z');
+        stage.style.height = '';
+        return;
+      }
+      const z = stage.clientWidth / 600;
+      app.style.zoom = String(z);
+      app.style.setProperty('--z', String(z));
+      const top = cards[focus || 'form'];
+      requestAnimationFrame(() => {
+        const r = top.getBoundingClientRect();
+        const sc = new DOMMatrix(getComputedStyle(top).transform).a || 1;
+        stage.style.height = `${140 + r.height / sc + 12}px`;
+      });
+    }
+    const ro = new ResizeObserver(() => fitPhone());
+    Object.values(cards).forEach((el) => ro.observe(el));
+    addEventListener('resize', fitPhone);
+    phoneMQ.addEventListener('change', () => { if (isPhone() && !focus) setFocus('form'); else if (!isPhone()) { setFocus(null); fitPhone(); } });
+    stage.addEventListener('click', (e) => {
+      const b = e.target.closest('.hs-steps button');
+      if (b) setFocus(b.dataset.go);
+    });
+    /* phones: a tap on a card that's behind only brings it forward; it must not also press
+       whatever control happened to be under the finger */
+    let tappedBehind = false;
+    stage.addEventListener('pointerdown', (e) => {
+      const card = e.target.closest('.hs-card');
+      tappedBehind = !!(isPhone() && card && !card.classList.contains('is-focus'));
+    }, true);
+    stage.addEventListener('click', (e) => {
+      if (tappedBehind) { e.preventDefault(); e.stopPropagation(); tappedBehind = false; }
+    }, true);
     function maybeLeave() {
       clearTimeout(leaveTimer);
+      if (isPhone()) return;
       leaveTimer = setTimeout(() => {
         const el = focus && cards[focus];
         if (!el || drag || selectOpen) return;
@@ -393,6 +450,7 @@
       flightPath.setAttribute('d', d);
       const len = flightPath.getTotalLength();
       const tl = flightTimeline(len);
+      heroAnim.flights++;
       const plane = document.createElement('div');
       plane.className = 'hs-plane';
       plane.innerHTML = PLANE;
@@ -417,7 +475,7 @@
           setTimeout(() => dot.remove(), 750);
         }
         if (el < tl.total) requestAnimationFrame(tick);
-        else { plane.remove(); onLand(); }
+        else { plane.remove(); heroAnim.flights--; holdHero(1500); onLand(); }
       });
     }
     /* Impact: the hit card comes out of its dimmed state, thumps, glows from the edges and
@@ -522,7 +580,9 @@
         /* out of the form, a lap to the left, a loop, then into 02 */
         const S = centerOf(btn);
         const sr = stage.getBoundingClientRect(), fr = form.getBoundingClientRect(), ar = app.getBoundingClientRect();
-        const T = toStage(Math.min(fr.right + 80, ar.right - 80), ar.top + ar.height * 0.45);
+        const T = isPhone()
+          ? toStage(ar.left + ar.width * 0.62, ar.top + 10)
+          : toStage(Math.min(fr.right + 80, ar.right - 80), ar.top + ar.height * 0.45);
         const r = 30;
         const C = { x: Math.max(S.x - 125, -sr.left + r + 16), y: Math.max(S.y - 210, r + 8) };
         const path = `M${S.x},${S.y} C${S.x - 30},${S.y - 70} ${C.x + r + 14},${C.y + 70} ${C.x + r},${C.y}`
@@ -534,10 +594,13 @@
           samAvail = snapshot;
           applyAvail(snapshot);
           updateBlocks();
+          if (isPhone()) setTimeout(() => setFocus('app'), 450);
           /* outline the shifts that just changed, so you can see what the form did */
           $$('.blk', colsEl).forEach((el) => {
             const d = +el.dataset.d, k = +el.dataset.k, sh = model[d].shifts[k];
             if (before[d][k] !== `${sh.s}-${sh.e}-${sh.gone}` && !sh.gone) {
+              /* on phones, scroll that day into view inside 02 */
+              if (isPhone()) el.closest('.col').scrollIntoView({ block: 'nearest', inline: 'nearest' });
               el.classList.add('changed');
               setTimeout(() => {
                 el.classList.add('fade-out');
@@ -555,6 +618,7 @@
     colsEl.addEventListener('pointerdown', (e) => {
       const el = e.target.closest('.blk');
       if (!el || e.button > 0) return;
+      if (isPhone() && !app.classList.contains('is-focus')) return;   /* behind in the deck: the tap just brings it forward */
       const d = model[+el.dataset.d], sh = d.shifts[+el.dataset.k];
       const r = el.getBoundingClientRect(), lane = el.parentElement.getBoundingClientRect();
       const y = e.clientY - r.top, edge = Math.min(9, r.height / 4);
@@ -599,6 +663,7 @@
       buildModel();
       app.classList.add('regen');
       render();
+      holdHero(1400);
     });
 
     const copyBtn = $('#hsCopy');
@@ -613,15 +678,16 @@
       /* a short hop up and over into 03; if 02 is in front, aim for the part of 03 that shows */
       const S = centerOf(copyBtn);
       const cr = chat.getBoundingClientRect(), ar = app.getBoundingClientRect();
-      const behind = focus === 'app';
+      const behind = focus === 'app' && !isPhone();
       const x = behind ? Math.max(Math.min(cr.right - 40, ar.right + 50), cr.left + 40) : cr.left + cr.width * 0.55;
-      const T = toStage(x, cr.top + 70);
+      const T = toStage(x, isPhone() ? cr.top + 10 : cr.top + 70);
       const path = `M${S.x},${S.y} C${S.x + 20},${S.y - 150} ${T.x + 70},${T.y - 190} ${T.x},${T.y}`;
       fly(path, () => {
         if (behind) retrigger(chat, 'peek');
         impact(chat, bubble, T);
         renderLines();
         retrigger(linesEl, 'fresh');
+        if (isPhone()) setTimeout(() => setFocus('chat'), 450);
         $$('.hs-react.staff', chat).forEach((el) => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
         $('#hcReacts').classList.add('again');
       });
@@ -680,6 +746,9 @@
     render();
     renderLines();
     renderForm();
+    order.forEach((name, i) => { cards[name].dataset.depth = i; });
+    if (isPhone()) setFocus('form');
+    fitPhone();
   })();
   buildForms($('#formsLayer'));
   const { sides, pops } = buildBubbles($('#chaosLayer'), $('#genBtn'));
@@ -835,6 +904,7 @@
       clearTimeout(resumeTimer);
       /* past the story's end: an explicit Play means "take me down"; an automatic resume
          (after the reader touched or scrolled) must never carry them past "Under the hood" */
+      if (!explicit && heroBusy()) { resumeTimer = setTimeout(() => start(), 700); return; }
       const pastEnd = scrollY >= tourEnd() - 2;
       if (pastEnd && !explicit) { ended = true; render(); return; }
       toBottom = pastEnd;
