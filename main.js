@@ -204,9 +204,10 @@
   /* ---------------- render static DOM ---------------- */
   $('#storySched').innerHTML = schedHTML();
   /* hero animations report here so the guided tour never starts scrolling mid-animation */
-  const heroAnim = { flights: 0, until: performance.now() + 3400 };   /* entrance runs ~3.3s */
+  /* kick() is filled in by the tour: every new hero animation restarts its idle countdown */
+  const heroAnim = { flights: 0, until: performance.now() + 3400, kick: () => {} };   /* entrance runs ~3.3s */
   const heroBusy = () => heroAnim.flights > 0 || performance.now() < heroAnim.until;
-  const holdHero = (ms) => { heroAnim.until = Math.max(heroAnim.until, performance.now() + ms); };
+  const holdHero = (ms) => { heroAnim.until = Math.max(heroAnim.until, performance.now() + ms); heroAnim.kick(); };
 
   /* ---------------- hero collage: three interactive cards ----------------
      01 form → 02 schedule → 03 group chat share one schedule model. Submitting the form
@@ -400,6 +401,7 @@
       const len = flightPath.getTotalLength();
       const tl = flightTimeline(len);
       heroAnim.flights++;
+      heroAnim.kick();
       const plane = document.createElement('div');
       plane.className = 'hs-plane';
       plane.innerHTML = PLANE;
@@ -843,7 +845,7 @@
       clearTimeout(resumeTimer);
       /* past the story's end: an explicit Play means "take me down"; an automatic resume
          (after the reader touched or scrolled) must never carry them past "Under the hood" */
-      if (!explicit && heroBusy()) { resumeTimer = setTimeout(() => start(), 700); return; }
+      if (!explicit && heroBusy()) { waitForHero(); return; }
       const pastEnd = scrollY >= tourEnd() - 2;
       if (pastEnd && !explicit) { ended = true; render(); return; }
       toBottom = pastEnd;
@@ -857,12 +859,24 @@
       raf = null; lastT = 0;
       render();
     }
+    /* The idle countdown. The tour is a helper for someone who isn't sure what to do, so it
+       only starts after a full stretch of nothing happening: any interaction restarts the
+       countdown, and while a hero animation plays the countdown doesn't run at all. */
     function scheduleResume() {
       clearTimeout(resumeTimer);
       /* once the tour has finished, it stays finished — it must never grab the page back
          while the reader is working through the cards. Only an explicit Play restarts it. */
       if (paused || ended) return;
+      if (heroBusy()) { waitForHero(); return; }
       resumeTimer = setTimeout(start, isLanding() ? 7000 : 2000);
+    }
+    /* a hero animation is playing: hold off, then begin a fresh countdown once it finishes
+       (never start scrolling the moment it ends) */
+    function waitForHero() {
+      clearTimeout(resumeTimer);
+      if (paused || ended) return;
+      const wait = Math.max(120, heroAnim.until - performance.now());
+      resumeTimer = setTimeout(() => (heroBusy() ? waitForHero() : scheduleResume()), wait);
     }
     function userTakeover() {
       if (autoOn) stop();
@@ -895,7 +909,8 @@
     if (heroTour) heroTour.addEventListener('click', () => { if (!autoOn) btn.click(); });
 
     render();
-    resumeTimer = setTimeout(start, 7000);   /* the 7s-after-load rule */
+    heroAnim.kick = () => { if (!autoOn) scheduleResume(); };
+    scheduleResume();   /* 7s of idle, counted from when the hero's entrance animation finishes */
   })();
 
   /* ---------------- animation setup ---------------- */
