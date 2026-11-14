@@ -25,7 +25,7 @@
   /* shift colours, one step deeper so white names on them reach 4.5:1 */
   --p-blue: #3676d0;
   --p-green: #38845e;
-  --p-orange: #a36a1d;
+  --p-orange: #dd9a3f;
   --p-purple: #8364ca;
   --p-red: #d44244;
   --blue-btn: #006ff5;   /* brand blue, a hair deeper: white text on it passes 4.5:1 */
@@ -1453,6 +1453,10 @@ body {
 .blk.o {
   background: var(--p-orange);
 }
+/* white on this orange is only 2.2:1, so its names use dark ink instead (7.6:1) */
+.blk.o span {
+  color: #2a1a06;
+}
 .blk.r {
   background: var(--p-red);
 }
@@ -2315,38 +2319,137 @@ body {
   border-radius: 2px;
   background: var(--blue);
 }
-/* copy demo: the hours as a message in the staff group chat */
+/* copy demo: a staff group chat — someone asks, you reply with the pasted hours */
 .demo-chat {
+  width: min(330px, 100%);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
+  font-size: var(--t-14);
 }
-.demo-bubble {
-  background: #e3edff;
-  border: 1px solid rgba(13, 123, 255, 0.22);
-  border-radius: 18px 18px 18px 6px;
-  padding: 12px 18px 14px;
-  box-shadow: 0 8px 20px rgba(13, 40, 90, 0.08);
+.dc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--t-14);
+  font-weight: 600;
+  color: var(--ink);
 }
-.demo-bubble-head {
+.dc-avatars {
+  display: flex;
+}
+.dc-avatars span {
+  width: 22px;
+  height: 22px;
+  margin-left: -6px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+}
+.dc-avatars span:first-child {
+  margin-left: 0;
+}
+.dc-head small {
+  margin-left: auto;
+  font-size: var(--t-12);
+  font-weight: 500;
+  color: var(--muted);
+}
+.dc-msg {
+  position: relative;
+  max-width: 82%;
+  padding: 8px 12px;
+  line-height: 1.45;
+}
+/* their message: grey, on the left, with a tail at the bottom-left */
+.dc-in {
+  align-self: flex-start;
+  background: #eceff5;
+  color: var(--ink);
+  border-radius: 16px 16px 16px 4px;
+}
+.dc-in b {
   display: block;
   font-size: var(--t-12);
   font-weight: 600;
-  color: var(--blue-deep);
-  margin-bottom: 6px;
+  color: #157d49;
 }
-.demo-bubble pre {
-  font-family: var(--mono);
-  font-size: var(--t-14);
-  line-height: 1.6;
-  color: var(--ink);
+.dc-in::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: #eceff5;
+  border-bottom-right-radius: 12px;
+}
+.dc-in::after {
+  content: "";
+  position: absolute;
+  left: -10px;
+  bottom: 0;
+  width: 10px;
+  height: 12px;
+  background: #fff;
+  border-bottom-right-radius: 8px;
+}
+/* your reply: blue, on the right, with a tail at the bottom-right */
+.dc-out {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #0a63d4, #0852b5);
+  color: #fff;
+  border-radius: 16px 16px 4px 16px;
+}
+.dc-out::before {
+  content: "";
+  position: absolute;
+  right: -5px;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: #0852b5;
+  border-bottom-left-radius: 12px;
+}
+.dc-out::after {
+  content: "";
+  position: absolute;
+  right: -10px;
+  bottom: 0;
+  width: 10px;
+  height: 12px;
+  background: #fff;
+  border-bottom-left-radius: 8px;
+}
+.dc-out pre {
   margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.55;
 }
-.demo-meta {
+.dc-foot {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: var(--t-12);
   color: var(--muted);
-  padding-left: 6px;
+}
+.dc-react {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(13, 40, 90, 0.08);
 }
 /* 04 — the maker note reads as a statement, no demo panel */
 .feature-maker {
