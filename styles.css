@@ -532,29 +532,116 @@ body {
 }
 .hs-ripple {
   position: absolute;
-  width: 120px;
-  height: 120px;
-  margin: -60px 0 0 -60px;
+  width: 140px;
+  height: 140px;
+  margin: -70px 0 0 -70px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(195, 185, 255, 0.95), rgba(159, 143, 255, 0.55) 35%, rgba(159, 143, 255, 0) 70%);
-  mix-blend-mode: screen;
-  animation: hsRipple 1s var(--ease) forwards;
+  background: radial-gradient(circle, rgba(159, 143, 255, 0.85), rgba(159, 143, 255, 0.45) 35%, rgba(159, 143, 255, 0) 70%);
+  animation: hsRipple 1.2s var(--ease) forwards;
 }
-.hs-app .hs-ripple {
-  mix-blend-mode: multiply;
-  background: radial-gradient(circle, rgba(159, 143, 255, 0.55), rgba(159, 143, 255, 0.28) 35%, rgba(159, 143, 255, 0) 70%);
+.hs-bubble .hs-ripple {
+  background: radial-gradient(circle, rgba(236, 230, 255, 0.95), rgba(195, 185, 255, 0.6) 35%, rgba(195, 185, 255, 0) 70%);
 }
 @keyframes hsRipple {
-  from { transform: scale(0.2); opacity: 1; }
+  from { transform: scale(0.15); opacity: 1; }
+  to { transform: scale(7); opacity: 0; }
+}
+/* expanding rings from the impact point */
+.hs-ring {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  border: 3px solid rgba(159, 143, 255, 0.95);
+  box-shadow: 0 0 14px rgba(159, 143, 255, 0.8);
+  animation: hsRing 0.9s var(--ease) forwards;
+}
+.hs-ring.late {
+  animation-delay: 0.16s;
+  opacity: 0;
+  border-width: 2px;
+}
+.hs-bubble .hs-ring {
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.7);
+}
+@keyframes hsRing {
+  from { transform: scale(0.3); opacity: 1; }
   to { transform: scale(9); opacity: 0; }
 }
+/* edge glow, inside and around the card */
 .hs-shine.hs-glow {
-  animation: hsGlow 1.1s ease;
+  animation: hsGlow 1.3s ease;
 }
 @keyframes hsGlow {
-  30% { box-shadow: inset 0 0 0 2px rgba(159, 143, 255, 0.95), inset 0 0 48px rgba(159, 143, 255, 0.5); }
+  25% {
+    box-shadow:
+      inset 0 0 0 3px rgba(159, 143, 255, 1),
+      inset 0 0 70px rgba(159, 143, 255, 0.55),
+      0 0 0 4px rgba(159, 143, 255, 0.35),
+      0 0 60px 6px rgba(159, 143, 255, 0.6);
+  }
 }
-
+/* spark burst (stage coordinates) */
+.hs-spark {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  z-index: 21;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(159, 143, 255, 0.9);
+  animation: hsSpark 0.75s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+@keyframes hsSpark {
+  from { transform: translate(0, 0) scale(1.2); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+}
+/* the hit card comes out of the dim and gives a small thump */
+.hero-stage[data-focus] .hs-card.hs-hit {
+  filter: none;
+}
+@keyframes hsThump {
+  0% { scale: 1; }
+  25% { scale: 1.03; }
+  55% { scale: 0.99; }
+  100% { scale: 1; }
+}
+.hs-app.hs-hit {
+  animation: hsRise 0.9s var(--ease) 0.15s backwards, hsThump 0.6s var(--ease);
+}
+.hs-chat.hs-hit {
+  animation: hsSlideR 0.9s var(--ease) 2s backwards, hsThump 0.6s var(--ease);
+}
+.hs-chat.peek.hs-hit {
+  animation: hsSlideR 0.9s var(--ease) 2s backwards, hsPeek 1.1s var(--ease), hsThump 0.6s var(--ease);
+}
+/* shifts the form just changed get a purple outline that fades */
+.hs-app .blk.changed {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(159, 143, 255, 0.95), 0 0 22px rgba(159, 143, 255, 0.9);
+  z-index: 2;
+  transition:
+    top 0.4s var(--ease),
+    height 0.4s var(--ease),
+    opacity 0.3s ease,
+    box-shadow 0.25s ease;
+}
+.hs-app .blk.fade-out {
+  transition:
+    top 0.4s var(--ease),
+    height 0.4s var(--ease),
+    opacity 0.3s ease,
+    box-shadow 0.9s ease;
+}
+/* freshly pasted hours settle in */
+.hs-lines.fresh {
+  animation: hsFresh 0.6s var(--ease);
+}
+@keyframes hsFresh {
+  from { opacity: 0.2; transform: translateY(6px); filter: blur(2px); }
+}
 /* ---------- 02 — scheduler, a faithful copy of the app's schedule screen ---------- */
 .hs-app {
   left: 50%;
@@ -2862,6 +2949,8 @@ body.no-anim .reveal {
   .hs-react,
   .hs-ripple,
   .hs-glow,
+  .hs-hit,
+  .hs-lines.fresh,
   .live-dot::after,
   .caret {
     animation: none !important;

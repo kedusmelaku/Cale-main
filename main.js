@@ -350,19 +350,57 @@
     const PLANE = '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M2.5 11.2 21 3.5l-5.6 17.2-4.1-6.6-8.8-2.9z" fill="#fff" stroke="#0d7bff" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.3 14.1 21 3.5" stroke="#0d7bff" stroke-width="1.4" stroke-linecap="round"/></svg>';
     const toStage = (x, y) => { const r = stage.getBoundingClientRect(); return { x: x - r.left, y: y - r.top }; };
     const centerOf = (el) => { const r = el.getBoundingClientRect(); return toStage(r.left + r.width / 2, r.top + r.height / 2); };
-    const easeIO = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-    function fly(d, ms, onLand) {
+    /* Flight timing is speed-based, not a fixed ease: the plane slows wherever the path
+       bends (the loop, the turn into a card) and speeds up on the straights, like a real
+       glider banking. It also eases off the launch and flares before landing. */
+    function flightTimeline(len) {
+      const step = 2, n = Math.max(2, Math.ceil(len / step));
+      const ls = [], ang = [];
+      for (let i = 0; i <= n; i++) {
+        const l = (i / n) * len;
+        const a = flightPath.getPointAtLength(Math.max(0, l - 1)), b = flightPath.getPointAtLength(Math.min(len, l + 1));
+        ls.push(l);
+        ang.push(Math.atan2(b.y - a.y, b.x - a.x));
+      }
+      /* curvature = heading change per pixel, smoothed so the slowdown starts before the turn */
+      const curv = ang.map((_, i) => {
+        if (i === 0) return 0;
+        let d = Math.abs(ang[i] - ang[i - 1]);
+        if (d > Math.PI) d = 2 * Math.PI - d;
+        return d / (ls[i] - ls[i - 1]);
+      });
+      const W = 9;
+      const smooth = curv.map((_, i) => {
+        let m = 0;
+        for (let j = Math.max(0, i - W); j <= Math.min(n, i + W); j++) m = Math.max(m, curv[j] * (1 - Math.abs(j - i) / (W + 1)));
+        return m;
+      });
+      const V = 0.78, K = 85;   /* px per ms on straights; how hard turns brake (a 30px loop ≈ 3.8× slower) */
+      const ts = [0];
+      for (let i = 1; i <= n; i++) {
+        const l = ls[i];
+        const launch = Math.min(1, 0.3 + l / 90), flare = Math.min(1, 0.35 + (len - l) / 110);
+        const v = (V / (1 + K * smooth[i])) * launch * flare;
+        ts.push(ts[i - 1] + (ls[i] - ls[i - 1]) / v);
+      }
+      return { ls, ts, total: ts[n] };
+    }
+    function fly(d, onLand) {
       if (!motionOK) { onLand(); return; }
       flightPath.setAttribute('d', d);
       const len = flightPath.getTotalLength();
+      const tl = flightTimeline(len);
       const plane = document.createElement('div');
       plane.className = 'hs-plane';
       plane.innerHTML = PLANE;
       stage.appendChild(plane);
       const t0 = performance.now();
-      let frame = 0;
+      let frame = 0, k = 0;
       requestAnimationFrame(function tick(now) {
-        const t = Math.min(1, (now - t0) / ms), l = easeIO(t) * len;
+        const el = Math.min(tl.total, now - t0);
+        while (k < tl.ts.length - 2 && tl.ts[k + 1] < el) k++;
+        const f = (el - tl.ts[k]) / (tl.ts[k + 1] - tl.ts[k] || 1);
+        const l = tl.ls[k] + (tl.ls[k + 1] - tl.ls[k]) * Math.min(1, f);
         const p = flightPath.getPointAtLength(l);
         const a = flightPath.getPointAtLength(Math.max(0, l - 1.5)), b = flightPath.getPointAtLength(Math.min(len, l + 1.5));
         /* the icon's nose points up-right (-45°), so offset the heading by 45° */
@@ -375,22 +413,42 @@
           stage.appendChild(dot);
           setTimeout(() => dot.remove(), 750);
         }
-        if (t < 1) requestAnimationFrame(tick);
+        if (el < tl.total) requestAnimationFrame(tick);
         else { plane.remove(); onLand(); }
       });
     }
-    function shimmer(host, pt) {
+    /* Impact: the hit card comes out of its dimmed state, thumps, glows from the edges and
+       sends a ring and a spark burst out from exactly where the plane landed. */
+    function impact(card, host, pt) {
+      clearTimeout(card._hitT);
+      retrigger(card, 'hs-hit');
+      card._hitT = setTimeout(() => card.classList.remove('hs-hit'), 1400);
       const shine = $('.hs-shine', host);
       retrigger(shine, 'hs-glow');
       if (!motionOK) return;
       const r = shine.getBoundingClientRect(), sr = stage.getBoundingClientRect();
       const z = r.width / shine.offsetWidth || 1;   /* account for CSS zoom on phones */
-      const rip = document.createElement('span');
-      rip.className = 'hs-ripple';
-      rip.style.left = `${(pt.x + sr.left - r.left) / z}px`;
-      rip.style.top = `${(pt.y + sr.top - r.top) / z}px`;
-      shine.appendChild(rip);
-      setTimeout(() => rip.remove(), 1050);
+      const lx = (pt.x + sr.left - r.left) / z, ly = (pt.y + sr.top - r.top) / z;
+      ['hs-ripple', 'hs-ring', 'hs-ring late'].forEach((cls) => {
+        const el = document.createElement('span');
+        el.className = cls;
+        el.style.left = `${lx}px`;
+        el.style.top = `${ly}px`;
+        shine.appendChild(el);
+        setTimeout(() => el.remove(), 1400);
+      });
+      for (let i = 0; i < 18; i++) {
+        const sp = document.createElement('span');
+        const ang = (i / 18) * Math.PI * 2 + Math.random() * 0.35, dist = 46 + Math.random() * 46;
+        sp.className = 'hs-spark';
+        sp.style.left = `${pt.x}px`;
+        sp.style.top = `${pt.y}px`;
+        sp.style.setProperty('--dx', `${Math.cos(ang) * dist}px`);
+        sp.style.setProperty('--dy', `${Math.sin(ang) * dist}px`);
+        sp.style.background = i % 3 ? '#9f8fff' : '#0d7bff';
+        stage.appendChild(sp);
+        setTimeout(() => sp.remove(), 800);
+      }
     }
 
     /* ----- 01: the availability form ----- */
@@ -467,11 +525,24 @@
         const path = `M${S.x},${S.y} C${S.x - 30},${S.y - 70} ${C.x + r + 14},${C.y + 70} ${C.x + r},${C.y}`
           + ` A${r},${r} 0 1 0 ${C.x - r},${C.y} A${r},${r} 0 1 0 ${C.x + r},${C.y}`
           + ` C${C.x + r},${C.y - 90} ${T.x - 130},${T.y - 120} ${T.x},${T.y}`;
-        fly(path, 1900, () => {
-          shimmer(app, T);
+        fly(path, () => {
+          impact(app, app, T);
+          const before = model.map((d) => d.shifts.map((x) => `${x.s}-${x.e}-${x.gone}`));
           samAvail = snapshot;
           applyAvail(snapshot);
           updateBlocks();
+          /* outline the shifts that just changed, so you can see what the form did */
+          $$('.blk', colsEl).forEach((el) => {
+            const d = +el.dataset.d, k = +el.dataset.k, sh = model[d].shifts[k];
+            if (before[d][k] !== `${sh.s}-${sh.e}-${sh.gone}` && !sh.gone) {
+              el.classList.add('changed');
+              setTimeout(() => {
+                el.classList.add('fade-out');
+                el.classList.remove('changed');
+                setTimeout(() => el.classList.remove('fade-out'), 950);
+              }, 1300);
+            }
+          });
         });
       }, 260);
       setTimeout(() => { btn.classList.remove('sent'); btn.textContent = 'Submit Availability'; }, 2800);
@@ -543,10 +614,11 @@
       const x = behind ? Math.max(Math.min(cr.right - 40, ar.right + 50), cr.left + 40) : cr.left + cr.width * 0.55;
       const T = toStage(x, cr.top + 70);
       const path = `M${S.x},${S.y} C${S.x + 20},${S.y - 150} ${T.x + 70},${T.y - 190} ${T.x},${T.y}`;
-      fly(path, 1150, () => {
+      fly(path, () => {
         if (behind) retrigger(chat, 'peek');
-        shimmer(bubble, T);
+        impact(chat, bubble, T);
         renderLines();
+        retrigger(linesEl, 'fresh');
         $$('.hs-react.staff', chat).forEach((el) => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
         $('#hcReacts').classList.add('again');
       });
