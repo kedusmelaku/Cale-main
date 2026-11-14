@@ -52,11 +52,27 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap" />
-    <link rel="stylesheet" href="./styles.css?v=20261114" />
+    <!-- styles.css and main.js are fetched with this page's own Last-Modified time as a cache key,
+         so a freshly deployed page can never be paired with stale cached copies of them.
+         Nothing to bump by hand: every deploy changes the key automatically. -->
+    <script>
+      (function () {
+        var t = Date.parse(document.lastModified);
+        var q = isNaN(t) ? "" : "?d=" + t;
+        window.__caleAsset = function (f) { return "./" + f + q; };
+        document.write('<link rel="stylesheet" href="' + window.__caleAsset("styles.css") + '" />');
+        /* main.js needs GSAP (deferred above) and the parsed DOM, so it loads at DOMContentLoaded */
+        document.addEventListener("DOMContentLoaded", function () {
+          var sc = document.createElement("script");
+          sc.src = window.__caleAsset("main.js");
+          document.body.appendChild(sc);
+        });
+      })();
+    </script>
+    <noscript><link rel="stylesheet" href="./styles.css" /></noscript>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
-    <script defer src="./main.js?v=20261114"></script>
   </head>
   <body>
     <div class="field" aria-hidden="true"></div>
@@ -100,57 +116,63 @@
           </div>
         </div>
 
-        <div class="hero-stage" role="img" aria-label="Cale in three steps: a staff member submits availability with their PIN, Cale generates the week's schedule, and the hours are pasted to the staff group.">
-          <!-- 02 — the scheduler (columns injected by JS from the same data as the story) -->
-          <div class="hs-app" id="heroApp" aria-hidden="true">
-            <span class="hs-tag"><b>02</b> Cale builds the week</span>
+        <div class="hero-stage" id="heroStage">
+          <p class="sr-only">An interactive example of Cale in three steps. Step one is the availability form a staff member fills in. Step two is the schedule Cale builds, where shifts can be dragged and resized. Step three is the copied hours pasted into the staff group chat.</p>
+          <svg class="hs-flight" id="hsFlight" aria-hidden="true"><path id="hsFlightPath" fill="none" /></svg>
+
+          <!-- 02 — the scheduler -->
+          <div class="hs-app hs-card" id="heroApp" data-card="app">
+            <span class="hs-tag" aria-hidden="true"><b>02</b> Cale builds the week<span class="hs-try">Drag shifts or their edges</span></span>
+            <div class="hs-shine" aria-hidden="true"></div>
             <div class="hs-app-head">
-              <span class="hs-back">← Employees</span>
-              <span class="hs-brand"><img src="./logo.svg" alt="" width="20" height="20" />Cale</span>
+              <span class="hs-back" aria-hidden="true">← Employees</span>
+              <span class="hs-brand" aria-hidden="true"><img src="./logo.svg" alt="" width="20" height="20" />Cale</span>
               <span class="hs-head-actions">
-                <span class="hs-copy">Copy to Clipboard</span>
-                <span class="hs-gen">Generate Schedule
+                <button class="hs-copy" id="hsCopy" type="button"><span class="hs-copy-label">Copy to Clipboard</span></button>
+                <button class="hs-gen" id="hsGen" type="button">Generate Schedule
                   <svg class="hs-cursor" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2l16 9-7 2-3 7z" fill="#0b1526" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                </span>
+                </button>
               </span>
             </div>
             <div class="hs-app-body">
-              <div class="hs-sched-top">
+              <div class="hs-sched-top" aria-hidden="true">
                 <span class="sched-h">Schedule</span><span class="pill-connected">Connected</span>
                 <span class="hs-week">Week of 7/13</span>
               </div>
-              <div class="cols" id="heroCols"></div>
+              <div class="cols" id="heroCols" role="group" aria-label="Example schedule. Shifts can be dragged with a mouse or finger."></div>
             </div>
           </div>
 
-          <!-- 01 — the availability form staff fill in -->
-          <div class="hs-form" aria-hidden="true">
-            <span class="hs-tag"><b>01</b> Staff submit availability</span>
+          <!-- 01 — the availability form (mirrors the real one: day checkboxes, start and end selects) -->
+          <form class="hs-form hs-card" id="heroForm" data-card="form" novalidate aria-label="Example availability form">
+            <span class="hs-tag" aria-hidden="true"><b>01</b> Staff submit availability<span class="hs-try">Fill it out and submit</span></span>
             <div class="hs-form-title">Submit Availability</div>
             <div class="hi">Hi Sam 👋</div>
             <div class="week">Week of July 13, 2026</div>
-            <div class="day-row fills"><div class="day-line"><span class="box"><span class="tick">✓</span></span>Monday</div><div class="times"><span class="time-chip">3:00 PM</span><span class="to">→</span><span class="time-chip">8:00 PM</span></div></div>
-            <div class="day-row fills"><div class="day-line"><span class="box"><span class="tick">✓</span></span>Tuesday</div><div class="times"><span class="time-chip">3:00 PM</span><span class="to">→</span><span class="time-chip">8:00 PM</span></div></div>
-            <div class="day-row"><div class="day-line"><span class="box"></span>Wednesday</div></div>
-            <button class="mini-submit" type="button" tabindex="-1">Submit Availability</button>
-          </div>
+            <label class="hs-all"><input type="checkbox" id="hfAll" /> Select all days</label>
+            <div class="hs-days" id="hfDays"></div>
+            <button class="mini-submit" id="hfSubmit" type="submit">Submit Availability</button>
+            <p class="hs-form-msg" id="hfMsg" role="status"></p>
+          </form>
 
           <!-- 03 — the copied hours, pasted to the staff group -->
-          <div class="hs-chat" aria-hidden="true">
-            <span class="hs-tag"><b>03</b> Paste &amp; send</span>
+          <div class="hs-chat hs-card" id="heroChat" data-card="chat">
+            <span class="hs-tag" aria-hidden="true"><b>03</b> Paste &amp; send<span class="hs-try">Hover a name, add a reaction</span></span>
             <div class="hs-bubble">
+              <div class="hs-shine" aria-hidden="true"></div>
               <div class="msg-head">Pasted from Cale</div>
-              <pre>Hours for Monday (7/13):
-Sam: 3-8
-Jordan: 3-6
-Morgan: 3-8
-
-Hours for Tuesday (7/14):
-Sam: 3-8
-Jordan: 3-8
-Casey: 3-5</pre>
+              <div class="hs-lines" id="hcLines"></div>
+              <div class="hs-sum" id="hcSum" aria-live="polite"></div>
             </div>
-            <div class="hs-reacts"><span>👍 Sam</span><span>👍 Jordan</span><span>👍 Casey</span></div>
+            <div class="hs-reacts" id="hcReacts">
+              <span class="hs-react staff">👍 Sam</span><span class="hs-react staff">👍 Jordan</span><span class="hs-react staff">👍 Casey</span>
+              <span class="hs-react-add">
+                <button class="hs-react-btn" id="hcAdd" type="button" aria-label="Add a reaction" aria-expanded="false">+ 🙂</button>
+                <span class="hs-tray" id="hcTray" role="menu">
+                  <button type="button" role="menuitem" data-e="👍">👍</button><button type="button" role="menuitem" data-e="✅">✅</button><button type="button" role="menuitem" data-e="🙌">🙌</button><button type="button" role="menuitem" data-e="❤️">❤️</button>
+                </span>
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -255,7 +277,7 @@ Morgan: 12-2</pre>
               <div class="feature-copy">
                 <span class="feature-n">01</span>
                 <h3>PIN-based access</h3>
-                <p>Every staff member gets a unique PIN. They enter it, submit, done — no account creation standing between them and the form.</p>
+                <p>Every staff member gets their own PIN. They enter it, pick their hours, and submit. No accounts or passwords stand between them and the form.</p>
               </div>
               <div class="feature-demo" aria-hidden="true">
                 <div class="demo-pin">
@@ -269,13 +291,13 @@ Morgan: 12-2</pre>
               <div class="feature-copy">
                 <span class="feature-n">02</span>
                 <h3>Google Calendar sync</h3>
-                <p>Connect once. Cale reads your student session data and weighs real demand into every schedule it generates — read-only, nothing stored.</p>
+                <p>Connect once and Cale reads your student sessions, so every schedule is built around how many kids are actually coming in. Access is read-only and nothing is stored.</p>
               </div>
               <div class="feature-demo" aria-hidden="true">
-                <div class="demo-cal">
-                  <div class="cal-chip c1"><span>Session · 4:30</span></div>
-                  <div class="cal-chip c3"><span>Session · 5:30</span></div>
-                  <div class="demo-demand"><span class="mono">4:30 PM</span> 6 students booked</div>
+                <div class="demo-demand-chart">
+                  <div class="dd-head"><span>Students booked</span><span class="mono">Tue 7/14</span></div>
+                  <div class="dd-plot"><div class="dd-col" style="--v:2"><span class="dd-n">2</span><span class="dd-bar"></span><span class="dd-x">3</span></div><div class="dd-col" style="--v:3"><span class="dd-n">3</span><span class="dd-bar"></span><span class="dd-x"></span></div><div class="dd-col peak" style="--v:5"><span class="dd-n">5</span><span class="dd-bar"></span><span class="dd-x">4</span></div><div class="dd-col peak" style="--v:6"><span class="dd-n">6</span><span class="dd-bar"></span><span class="dd-x"></span></div><div class="dd-col peak" style="--v:6"><span class="dd-n">6</span><span class="dd-bar"></span><span class="dd-x">5</span></div><div class="dd-col" style="--v:4"><span class="dd-n">4</span><span class="dd-bar"></span><span class="dd-x"></span></div><div class="dd-col" style="--v:3"><span class="dd-n">3</span><span class="dd-bar"></span><span class="dd-x">6</span></div><div class="dd-col" style="--v:4"><span class="dd-n">4</span><span class="dd-bar"></span><span class="dd-x"></span></div><div class="dd-col" style="--v:2"><span class="dd-n">2</span><span class="dd-bar"></span><span class="dd-x">7</span></div><div class="dd-col" style="--v:1"><span class="dd-n">1</span><span class="dd-bar"></span><span class="dd-x"></span></div></div>
+                  <div class="dd-foot"><span class="dd-key"></span>Busiest at <span class="mono">4:30 PM</span>, so Cale staffs up there</div>
                 </div>
               </div>
             </article>
@@ -284,7 +306,7 @@ Morgan: 12-2</pre>
               <div class="feature-copy">
                 <span class="feature-n">03</span>
                 <h3>Copy-ready hours</h3>
-                <p>The finished week formats itself for your clipboard — every shift, every person, ready to paste wherever you send schedules.</p>
+                <p>The finished week formats itself for your clipboard. Every shift and every person, ready to paste into your staff group chat or anywhere else you send schedules.</p>
               </div>
               <div class="feature-demo" aria-hidden="true">
                 <pre class="demo-copy">Hours for Tuesday (7/14):
@@ -298,7 +320,7 @@ Casey: 3-5</pre>
               <div class="feature-copy">
                 <span class="feature-n">04</span>
                 <h3>Built by an instructor</h3>
-                <p>Cale was built by a Mathnasium instructor who has lived the weekly scheduling scramble firsthand — designed around how centers actually run, not a generic shift tool.</p>
+                <p>Cale was built by a Mathnasium instructor who has lived the weekly scheduling scramble firsthand. It is designed around how centers actually run, not as a generic shift tool.</p>
               </div>
             </article>
           </div>
