@@ -350,38 +350,41 @@
     const PLANE = '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M2.5 11.2 21 3.5l-5.6 17.2-4.1-6.6-8.8-2.9z" fill="#fff" stroke="#0d7bff" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.3 14.1 21 3.5" stroke="#0d7bff" stroke-width="1.4" stroke-linecap="round"/></svg>';
     const toStage = (x, y) => { const r = stage.getBoundingClientRect(); return { x: x - r.left, y: y - r.top }; };
     const centerOf = (el) => { const r = el.getBoundingClientRect(); return toStage(r.left + r.width / 2, r.top + r.height / 2); };
-    /* Flight timing is speed-based, not a fixed ease: the plane slows wherever the path
-       bends (the loop, the turn into a card) and speeds up on the straights, like a real
-       glider banking. It also eases off the launch and flares before landing. */
+    /* Flight timing works like a vehicle's speed plan. Each point on the path gets a
+       speed limit from how sharply it bends (the loop and turns are slow), then the speed
+       can only rise or fall at a capped rate: a forward pass limits acceleration and a
+       backward pass makes it start braking early enough for the next turn. A final pass
+       rounds off the ramps, so the plane never jumps from one speed to another. */
     function flightTimeline(len) {
-      const step = 2, n = Math.max(2, Math.ceil(len / step));
-      const ls = [], ang = [];
+      const step = 2, n = Math.max(2, Math.ceil(len / step)), ds = len / n;
+      const ang = [];
       for (let i = 0; i <= n; i++) {
-        const l = (i / n) * len;
+        const l = i * ds;
         const a = flightPath.getPointAtLength(Math.max(0, l - 1)), b = flightPath.getPointAtLength(Math.min(len, l + 1));
-        ls.push(l);
         ang.push(Math.atan2(b.y - a.y, b.x - a.x));
       }
-      /* curvature = heading change per pixel, smoothed so the slowdown starts before the turn */
       const curv = ang.map((_, i) => {
         if (i === 0) return 0;
         let d = Math.abs(ang[i] - ang[i - 1]);
         if (d > Math.PI) d = 2 * Math.PI - d;
-        return d / (ls[i] - ls[i - 1]);
+        return d / ds;
       });
-      const W = 9;
-      const smooth = curv.map((_, i) => {
-        let m = 0;
-        for (let j = Math.max(0, i - W); j <= Math.min(n, i + W); j++) m = Math.max(m, curv[j] * (1 - Math.abs(j - i) / (W + 1)));
-        return m;
+      const avg = (arr, w) => arr.map((_, i) => {
+        let sum = 0, c = 0;
+        for (let j = Math.max(0, i - w); j <= Math.min(n, i + w); j++) { sum += arr[j]; c++; }
+        return sum / c;
       });
-      const V = 0.78, K = 85;   /* px per ms on straights; how hard turns brake (a 30px loop ≈ 3.8× slower) */
-      const ts = [0];
+      const V = 0.75, K = 85, A = 0.0011;   /* top speed px/ms · how hard turns brake · max accel px/ms² */
+      const v = avg(curv, 10).map((c) => V / (1 + K * c));
+      v[0] = 0.16;      /* launch speed */
+      v[n] = 0.2;       /* touchdown speed */
+      for (let i = 1; i <= n; i++) v[i] = Math.min(v[i], Math.sqrt(v[i - 1] ** 2 + 2 * A * ds));
+      for (let i = n - 1; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[i + 1] ** 2 + 2 * A * ds));
+      const vs = avg(v, 15);
+      const ls = [0], ts = [0];
       for (let i = 1; i <= n; i++) {
-        const l = ls[i];
-        const launch = Math.min(1, 0.3 + l / 90), flare = Math.min(1, 0.35 + (len - l) / 110);
-        const v = (V / (1 + K * smooth[i])) * launch * flare;
-        ts.push(ts[i - 1] + (ls[i] - ls[i - 1]) / v);
+        ls.push(i * ds);
+        ts.push(ts[i - 1] + ds / ((vs[i - 1] + vs[i]) / 2));
       }
       return { ls, ts, total: ts[n] };
     }

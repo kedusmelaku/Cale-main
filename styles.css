@@ -837,9 +837,17 @@ body {
   box-shadow: 0 0 0 2px #fff, 0 10px 24px rgba(13, 40, 90, 0.35);
   z-index: 3;
 }
+/* removed shifts stay hidden even while the grow animation plays (it animates opacity,
+   which would otherwise flash them in and out); visibility flips after the fade-out */
 .hs-app .blk.gone {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
+  transition:
+    top 0.4s var(--ease),
+    height 0.4s var(--ease),
+    opacity 0.3s ease,
+    visibility 0s linear 0.3s;
 }
 /* time readout while hovering or dragging a shift */
 .blk-time {
