@@ -100,7 +100,7 @@
         </div>
       </div>`).join('');
     return `
-      <div class="window-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">app.usecale.com</span></div>
+      <div class="window-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">calendar</span></div>
       <div class="body-wrap">
         <div class="sched-body">
           <div class="sched-top">
@@ -1096,6 +1096,7 @@
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduced || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
     document.body.classList.add('no-anim');
+    const u = $('#storySched .window-bar .url'); if (u) u.textContent = 'app.usecale.com';
     return;
   }
   gsap.registerPlugin(ScrollTrigger);
@@ -1328,6 +1329,17 @@
     tl.to(schedTop, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1 }, 86.6);
     tl.to(hoursPanel, { opacity: 1, scale: 1, ease: 'back.out(1.7)', duration: 1 }, 88.9);
     tl.set(calBody, { opacity: 0 }, 89.9);
+    /* the address pill reads "calendar" while the bookings are read, then pops to the app's
+       address as the bar wipes the calendar away and the schedule appears (both directions) */
+    const urlEl = $('.window-bar .url', schedWin);
+    const URL_SWITCH = 86.6;
+    tl.eventCallback('onUpdate', () => {
+      const want = tl.time() >= URL_SWITCH ? 'app.usecale.com' : 'calendar';
+      if (urlEl.textContent !== want) {
+        urlEl.textContent = want;
+        urlEl.classList.remove('pop'); void urlEl.offsetWidth; urlEl.classList.add('pop');
+      }
+    });
     tl.to(scanBar, { opacity: 0, duration: 0.8 }, 89.9);        /* day columns stay blank for now */
 
     /* beat 8 — days pop in left to right */

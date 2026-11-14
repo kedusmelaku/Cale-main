@@ -1091,6 +1091,8 @@ body {
   display: block;
 }
 .hs-reacts {
+  position: relative;
+  z-index: 5;   /* above the bubble and its glow, so the chips stay bright */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1279,12 +1281,21 @@ body {
   background: #28c840;
 }
 .window-bar .url {
+  display: inline-block;
   margin-left: 12px;
   font-size: 12px;
   color: var(--app-muted);
   background: rgba(16, 32, 64, 0.06);
   padding: 4px 14px;
   border-radius: 7px;
+}
+.window-bar .url.pop {
+  animation: urlPop 0.45s var(--ease);
+}
+@keyframes urlPop {
+  0% { transform: scale(0.8); opacity: 0.3; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
 }
 /* ---------- Schedule mock (shared by hero + story) ---------- */
 .body-wrap {
@@ -1623,7 +1634,7 @@ body {
 .kicker {
   font-size: var(--t-14);
   font-weight: 600;
-  color: var(--muted);
+  color: var(--blue-deep);
   margin-bottom: var(--s-3);
 }
 .story-head h2,
