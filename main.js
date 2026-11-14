@@ -318,6 +318,41 @@
       Object.entries(cards).forEach(([name, el]) => el.classList.toggle('is-focus', name === k));
       if (k !== 'chat') closeTray();
       holdHero(600);
+      shuffleTo(k === 'app');
+    }
+
+    /* 02 overlaps 01 and 03, and stacking order flips instantly, so 02 never just pops in
+       front of (or behind) them. Instead the side cards slide outward until they clear 02,
+       the order flips while they're apart, and they glide back: a card-shuffle. Requests
+       that arrive mid-shuffle are queued, so quick hovers can't make it stutter. */
+    let appFront = false, shuffling = false, wantFront = false;
+    const SHUFFLE_MS = 520, SWAP_AT = 0.45;
+    function shuffleTo(front) {
+      wantFront = front;
+      if (shuffling || front === appFront) return;
+      if (!motionOK) { appFront = front; stage.classList.toggle('app-front', front); return; }
+      shuffling = true;
+      const ar = app.getBoundingClientRect(), fr = form.getBoundingClientRect(), cr = chat.getBoundingClientRect();
+      /* how far each must move to stop overlapping; when 02 drops back the side cards are also
+         gliding home from their "02 focused" offset (inward ~30-40px), so they go further */
+      const margin = front ? 18 : 96;
+      const clearForm = Math.max(0, fr.right - ar.left) + margin;
+      const clearChat = Math.max(0, ar.right - cr.left) + margin;
+      const ease = 'cubic-bezier(0.45, 0, 0.2, 1)';
+      const slide = (el, dx) => el.animate(
+        [{ translate: '0 0' }, { translate: `${dx}px 0`, offset: SWAP_AT }, { translate: '0 0' }],
+        { duration: SHUFFLE_MS, easing: ease, composite: 'add' },
+      );
+      slide(form, -clearForm);
+      slide(chat, clearChat);
+      setTimeout(() => {
+        appFront = front;
+        stage.classList.toggle('app-front', front);
+      }, SHUFFLE_MS * SWAP_AT);
+      setTimeout(() => {
+        shuffling = false;
+        if (wantFront !== appFront) shuffleTo(wantFront);
+      }, SHUFFLE_MS);
     }
     function maybeLeave() {
       clearTimeout(leaveTimer);

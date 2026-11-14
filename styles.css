@@ -454,26 +454,24 @@ body {
   bottom: 0;
   height: 110px;
   background: linear-gradient(rgba(250, 251, 255, 0), var(--bg) 85%);
-  z-index: 5;
+  z-index: 4;
   pointer-events: none;
 }
-/* shared card behaviour. z-index waits for the transform to settle on the way back,
-   so a card that was in front slides home before it drops behind the others. */
+/* shared card behaviour. Stacking order can't animate, so cards never swap order while
+   they overlap: 01 and 03 sit side by side and never touch, and when 02 changes places
+   with them JS slides them clear first and flips the order (.app-front) while apart. */
 .hs-card {
   position: absolute;
   transition:
     transform 0.5s var(--ease),
-    filter 0.35s ease,
-    translate 0.5s var(--ease),
-    z-index 0s linear 0.5s;
+    filter 0.35s ease;
 }
-.hs-card.is-focus {
+.hs-form.is-focus,
+.hs-chat.is-focus {
+  z-index: 5;   /* above the fade overlay; still below 02 when 02 is in front */
+}
+.hero-stage.app-front .hs-app {
   z-index: 6;
-  transition:
-    transform 0.5s var(--ease),
-    filter 0.35s ease,
-    translate 0.5s var(--ease),
-    z-index 0s linear 0s;
 }
 .hero-stage[data-focus] .hs-card:not(.is-focus) {
   filter: brightness(0.62) saturate(0.75);
