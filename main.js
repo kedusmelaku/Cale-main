@@ -10,15 +10,15 @@
 
   /* ---------------- data (mirrors the real app mock) ---------------- */
   const SCHED = [
-    { d: 'MON', dt: '7/13', range: '3:00 PM – 8:00 PM', axis: ['3','4','5','6','7','8'],
+    { d: 'MONDAY', dt: '7/13', range: '3:00 PM – 8:00 PM', axis: ['3','4','5','6','7','8'],
       blocks: [{ p:'b', n:'Sam', top:2, h:90, x:4 }, { p:'g', n:'Jordan', top:2, h:64, x:36 }, { p:'o', n:'Morgan', top:2, h:90, x:66 }] },
-    { d: 'TUE', dt: '7/14', range: '3:00 PM – 8:00 PM', axis: ['3','4','5','6','7','8'],
+    { d: 'TUESDAY', dt: '7/14', range: '3:00 PM – 8:00 PM', axis: ['3','4','5','6','7','8'],
       blocks: [{ p:'b', n:'Sam', top:2, h:90, x:4 }, { p:'g', n:'Jordan', top:2, h:90, x:36 }, { p:'r', n:'Casey', top:2, h:44, x:66 }] },
-    { d: 'WED', dt: '7/15', range: '3:00 PM – 8:00 PM', axis: ['3','4','5','6','7','8'],
+    { d: 'WEDNESDAY', dt: '7/15', range: '3:00 PM – 8:00 PM', axis: ['3','4','5','6','7','8'],
       blocks: [{ p:'b', n:'Sam', top:2, h:90, x:4 }, { p:'o', n:'Morgan', top:2, h:90, x:54 }] },
-    { d: 'THU', dt: '7/16', range: '3:00 PM – 8:00 PM', axis: ['3','4','5','6','7','8'],
+    { d: 'THURSDAY', dt: '7/16', range: '3:00 PM – 8:00 PM', axis: ['3','4','5','6','7','8'],
       blocks: [{ p:'b', n:'Sam', top:2, h:90, x:4 }, { p:'g', n:'Jordan', top:2, h:90, x:36 }] },
-    { d: 'SAT', dt: '7/18', range: '10:00 AM – 2:00 PM', axis: ['10','11','12','1','2'],
+    { d: 'SATURDAY', dt: '7/18', range: '10:00 AM – 2:00 PM', axis: ['10','11','12','1','2'],
       blocks: [{ p:'g', n:'Jordan', top:2, h:90, x:4 }, { p:'b', n:'Sam', top:42, h:52, x:36 }, { p:'o', n:'Morgan', top:42, h:36, x:66 }] },
   ];
   const HOURS = [
@@ -60,8 +60,11 @@
   /* ---------------- builders ---------------- */
   const fmtHours = (v) => (Number.isInteger(v) ? `${v}h` : `${v}h`);
 
-  function schedHTML() {
-    const cols = SCHED.map((c) => `
+  /* day columns, shared by the story's schedule window and the hero collage.
+     withIndex adds a --i stagger so the hero's blocks fill in one after another. */
+  function colsHTML(withIndex = false) {
+    let n = 0;
+    return SCHED.map((c) => `
       <div class="col">
         <div class="col-head">${c.d} <span>${c.dt}</span></div>
         <div class="col-range">${c.range}</div>
@@ -69,10 +72,14 @@
           <div class="axis">${c.axis.map((a) => `<span>${a}</span>`).join('')}</div>
           <div class="lane">
             ${[20, 40, 60, 80].map((t) => `<div class="gridline" style="top:${t}%"></div>`).join('')}
-            ${c.blocks.map((b) => `<div class="blk ${b.p}" style="top:${b.top}%;height:${b.h}%;left:${b.x}%"><span>${b.n}</span></div>`).join('')}
+            ${c.blocks.map((b) => `<div class="blk ${b.p}" style="top:${b.top}%;height:${b.h}%;left:${b.x}%${withIndex ? `;--i:${n++}` : ''}"><span>${b.n}</span></div>`).join('')}
           </div>
         </div>
       </div>`).join('');
+  }
+
+  function schedHTML() {
+    const cols = colsHTML();
     const hours = HOURS.map((h) => `
       <div class="hours-row">
         <span class="who"><span class="dot ${h.c}"></span>${h.n}</span>
@@ -198,6 +205,8 @@
 
   /* ---------------- render static DOM ---------------- */
   $('#storySched').innerHTML = schedHTML();
+  const heroCols = $('#heroCols');
+  if (heroCols) heroCols.innerHTML = colsHTML(true);
   buildForms($('#formsLayer'));
   const { sides, pops } = buildBubbles($('#chaosLayer'), $('#genBtn'));
   buildPeople($('#people'));

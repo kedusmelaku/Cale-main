@@ -84,49 +84,74 @@
 
     <main class="wrap" id="top">
 
-      <!-- ============ ACT 1 — HERO (split: pitch left, this-week card right) ============ -->
+      <!-- ============ ACT 1 — HERO (headline + collage of the real app: form → scheduler → pasted hours) ============ -->
       <section class="hero" id="hero">
-        <div class="container hero-inner">
-          <div class="hero-copy" id="heroCopy">
-            <p class="hero-kicker">Staff scheduling for Mathnasium centers</p>
-            <h1>Scheduling that runs itself.</h1>
-            <p class="lead">Cale collects staff availability, cross-references your student bookings, and generates a ready-to-send schedule — in minutes, not hours.</p>
-            <div class="hero-actions">
-              <a class="btn btn-primary" href="#access">Request access</a>
-              <button class="btn btn-ghost" id="heroTour" type="button">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-                Watch how it works
-              </button>
-            </div>
-          </div>
-
-          <div class="week-card" aria-label="Example: next week's schedule, ready to send">
-            <div class="week-card-head">
-              <span class="week-card-title">Next week</span>
-              <span class="week-card-status">Ready to send</span>
-            </div>
-            <ul class="week-rows">
-              <li><span class="wd">Mon</span><span class="wbar"><i style="width:75%"></i></span><span class="wn">3 staff · 11 students</span></li>
-              <li><span class="wd">Tue</span><span class="wbar"><i style="width:100%"></i></span><span class="wn">3 staff · 14 students</span></li>
-              <li><span class="wd">Wed</span><span class="wbar"><i style="width:50%"></i></span><span class="wn">2 staff · 6 students</span></li>
-              <li><span class="wd">Thu</span><span class="wbar"><i style="width:60%"></i></span><span class="wn">2 staff · 9 students</span></li>
-              <li><span class="wd">Sat</span><span class="wbar"><i style="width:70%"></i></span><span class="wn">3 staff · 10 students</span></li>
-            </ul>
-            <div class="week-card-foot">
-              <span>Built from 8 availability forms</span>
-              <span class="mono">56h total</span>
-            </div>
+        <div class="hero-grid-bg" aria-hidden="true"></div>
+        <div class="container hero-top">
+          <p class="hero-kicker"><span class="live-dot" aria-hidden="true"></span>Free pilot for Mathnasium centers</p>
+          <h1>Scheduling that <span class="scribble">runs itself<svg class="scribble-line" viewBox="0 0 300 18" preserveAspectRatio="none" aria-hidden="true"><path d="M3 12 C 60 4, 120 3, 180 7 S 270 13, 297 6" /></svg></span>.</h1>
+          <p class="lead">Cale collects staff availability, cross-references your student bookings, and generates a ready-to-send schedule — in minutes, not hours.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#access">Request access</a>
+            <button class="btn btn-ghost" id="heroTour" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+              Watch how it works
+            </button>
           </div>
         </div>
 
-        <ol class="container hero-steps" aria-label="How Cale works">
-          <li><span class="step-n">01</span>Share one availability link</li>
-          <li><span class="step-n">02</span>Cale builds the week</li>
-          <li><span class="step-n">03</span>Paste &amp; send to staff</li>
-        </ol>
+        <div class="hero-stage" role="img" aria-label="Cale in three steps: a staff member submits availability with their PIN, Cale generates the week's schedule, and the hours are pasted to the staff group.">
+          <!-- 02 — the scheduler (columns injected by JS from the same data as the story) -->
+          <div class="hs-app" id="heroApp" aria-hidden="true">
+            <span class="hs-tag"><b>02</b> Cale builds the week</span>
+            <div class="hs-app-head">
+              <span class="hs-back">← Employees</span>
+              <span class="hs-brand"><img src="./logo.svg" alt="" width="20" height="20" />Cale</span>
+              <span class="hs-head-actions">
+                <span class="hs-copy">Copy to Clipboard</span>
+                <span class="hs-gen">Generate Schedule
+                  <svg class="hs-cursor" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2l16 9-7 2-3 7z" fill="#0b1526" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                </span>
+              </span>
+            </div>
+            <div class="hs-app-body">
+              <div class="hs-sched-top">
+                <span class="sched-h">Schedule</span><span class="pill-connected">Connected</span>
+                <span class="hs-week">Week of 7/13</span>
+              </div>
+              <div class="cols" id="heroCols"></div>
+            </div>
+          </div>
 
-        <div class="scroll-hint" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+          <!-- 01 — the availability form staff fill in -->
+          <div class="hs-form" aria-hidden="true">
+            <span class="hs-tag"><b>01</b> Staff submit availability</span>
+            <div class="hs-form-title">Submit Availability</div>
+            <div class="hi">Hi Sam 👋</div>
+            <div class="week">Week of July 13, 2026</div>
+            <div class="day-row fills"><div class="day-line"><span class="box"><span class="tick">✓</span></span>Monday</div><div class="times"><span class="time-chip">3:00 PM</span><span class="to">→</span><span class="time-chip">8:00 PM</span></div></div>
+            <div class="day-row fills"><div class="day-line"><span class="box"><span class="tick">✓</span></span>Tuesday</div><div class="times"><span class="time-chip">3:00 PM</span><span class="to">→</span><span class="time-chip">8:00 PM</span></div></div>
+            <div class="day-row"><div class="day-line"><span class="box"></span>Wednesday</div></div>
+            <button class="mini-submit" type="button" tabindex="-1">Submit Availability</button>
+          </div>
+
+          <!-- 03 — the copied hours, pasted to the staff group -->
+          <div class="hs-chat" aria-hidden="true">
+            <span class="hs-tag"><b>03</b> Paste &amp; send</span>
+            <div class="hs-bubble">
+              <div class="msg-head">Pasted from Cale</div>
+              <pre>Hours for Monday (7/13):
+Sam: 3-8
+Jordan: 3-6
+Morgan: 3-8
+
+Hours for Tuesday (7/14):
+Sam: 3-8
+Jordan: 3-8
+Casey: 3-5</pre>
+            </div>
+            <div class="hs-reacts"><span>👍 Sam</span><span>👍 Jordan</span><span>👍 Casey</span></div>
+          </div>
         </div>
       </section>
 
@@ -186,28 +211,28 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 Pasted from Cale
               </div>
-              <pre class="msg-text">Hours for Monday (7/13)
-Sam : 3-8
-Jordan : 3-6
-Morgan : 3-8
+              <pre class="msg-text">Hours for Monday (7/13):
+Sam: 3-8
+Jordan: 3-6
+Morgan: 3-8
 
-Hours for Tuesday (7/14)
-Sam : 3-8
-Jordan : 3-8
-Casey : 3-5
+Hours for Tuesday (7/14):
+Sam: 3-8
+Jordan: 3-8
+Casey: 3-5
 
-Hours for Wednesday (7/15)
-Sam : 3-8
-Morgan : 3-8
+Hours for Wednesday (7/15):
+Sam: 3-8
+Morgan: 3-8
 
-Hours for Thursday (7/16)
-Sam : 3-8
-Jordan : 3-8
+Hours for Thursday (7/16):
+Sam: 3-8
+Jordan: 3-8
 
-Hours for Saturday (7/18)
-Jordan : 10-2
-Sam : 12-2
-Morgan : 12-2</pre>
+Hours for Saturday (7/18):
+Jordan: 10-2
+Sam: 12-2
+Morgan: 12-2</pre>
             </div>
             <div class="msg-meta">Sent to staff group · just now</div>
           </div>
@@ -235,7 +260,7 @@ Morgan : 12-2</pre>
               <div class="feature-demo" aria-hidden="true">
                 <div class="demo-pin">
                   <span class="demo-label">Your PIN</span>
-                  <div class="pin-boxes"><span>•</span><span>•</span><span>•</span><span class="pin-live">4</span></div>
+                  <div class="pin-row"><span class="pin-input mono">1004<i class="caret"></i></span><span class="pin-go">Continue →</span></div>
                 </div>
               </div>
             </article>
@@ -250,7 +275,7 @@ Morgan : 12-2</pre>
                 <div class="demo-cal">
                   <div class="cal-chip c1"><span>Session · 4:30</span></div>
                   <div class="cal-chip c3"><span>Session · 5:30</span></div>
-                  <div class="demo-demand"><span class="mono">4:30 PM</span> 6 students → 2 instructors</div>
+                  <div class="demo-demand"><span class="mono">4:30 PM</span> 6 students booked</div>
                 </div>
               </div>
             </article>
@@ -262,10 +287,10 @@ Morgan : 12-2</pre>
                 <p>The finished week formats itself for your clipboard — every shift, every person, ready to paste wherever you send schedules.</p>
               </div>
               <div class="feature-demo" aria-hidden="true">
-                <pre class="demo-copy">Hours for Tuesday (7/14)
-Sam : 3-8
-Jordan : 3-8
-Casey : 3-5</pre>
+                <pre class="demo-copy">Hours for Tuesday (7/14):
+Sam: 3-8
+Jordan: 3-8
+Casey: 3-5</pre>
               </div>
             </article>
 
