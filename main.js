@@ -60,10 +60,8 @@
   /* ---------------- builders ---------------- */
   const fmtHours = (v) => (Number.isInteger(v) ? `${v}h` : `${v}h`);
 
-  /* day columns, shared by the story's schedule window and the hero collage.
-     withIndex adds a --i stagger so the hero's blocks fill in one after another. */
-  function colsHTML(withIndex = false) {
-    let n = 0;
+  /* day columns for the story's schedule window */
+  function colsHTML() {
     return SCHED.map((c) => `
       <div class="col">
         <div class="col-head">${c.d} <span>${c.dt}</span></div>
@@ -72,7 +70,7 @@
           <div class="axis">${c.axis.map((a) => `<span>${a}</span>`).join('')}</div>
           <div class="lane">
             ${[20, 40, 60, 80].map((t) => `<div class="gridline" style="top:${t}%"></div>`).join('')}
-            ${c.blocks.map((b) => `<div class="blk ${b.p}" style="top:${b.top}%;height:${b.h}%;left:${b.x}%${withIndex ? `;--i:${n++}` : ''}"><span>${b.n}</span></div>`).join('')}
+            ${c.blocks.map((b) => `<div class="blk ${b.p}" style="top:${b.top}%;height:${b.h}%;left:${b.x}%"><span>${b.n}</span></div>`).join('')}
           </div>
         </div>
       </div>`).join('');
@@ -205,8 +203,409 @@
 
   /* ---------------- render static DOM ---------------- */
   $('#storySched').innerHTML = schedHTML();
-  const heroCols = $('#heroCols');
-  if (heroCols) heroCols.innerHTML = colsHTML(true);
+  /* ---------------- hero collage: three interactive cards ----------------
+     01 form → 02 schedule → 03 group chat share one schedule model. Submitting the form
+     flies Sam's availability into the schedule; Copy to Clipboard flies the current hours
+     into the chat. Focus (hover / tap / keyboard) straightens a card, brings it forward
+     and dims the others; leaving is debounced and never happens mid-drag or mid-select. */
+  (() => {
+    const stage = $('#heroStage');
+    if (!stage) return;
+    const motionOK = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const app = $('#heroApp'), form = $('#heroForm'), chat = $('#heroChat');
+    const cards = { app, form, chat };
+    const colsEl = $('#heroCols');
+    const linesEl = $('#hcLines'), sumEl = $('#hcSum');
+    const bubble = $('.hs-bubble', chat);
+
+    /* same formatting helpers as Cale-App (utils.js) */
+    const clock = (m) => { const h = Math.floor(m / 60), mm = m % 60, dh = h % 12 || 12; return mm ? `${dh}:${String(mm).padStart(2, '0')}` : String(dh); };
+    const label = (m) => { const h = Math.floor(m / 60), mm = m % 60, dh = h % 12 || 12; return `${dh}:${String(mm).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; };
+    const cap = (w) => w.charAt(0) + w.slice(1).toLowerCase();
+    const retrigger = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+
+    /* ----- schedule model (minutes since midnight), seeded from the story's data ----- */
+    const SPAN = [[900, 1200], [900, 1200], [900, 1200], [900, 1200], [600, 840]];
+    const DEFAULT = [
+      [['Sam', 900, 1200], ['Jordan', 900, 1080], ['Morgan', 900, 1200]],
+      [['Sam', 900, 1200], ['Jordan', 900, 1200], ['Casey', 900, 1020]],
+      [['Sam', 900, 1200], ['Morgan', 900, 1200]],
+      [['Sam', 900, 1200], ['Jordan', 900, 1200]],
+      [['Jordan', 600, 840], ['Sam', 720, 840], ['Morgan', 720, 840]],
+    ];
+    let samAvail = null;   /* last availability submitted through the form */
+    let model = [];
+    function buildModel() {
+      model = SCHED.map((c, i) => ({
+        name: cap(c.d), d: c.d, dt: c.dt, range: c.range, axis: c.axis,
+        s0: SPAN[i][0], e0: SPAN[i][1],
+        shifts: DEFAULT[i].map(([n, s, e], k) => ({ n, s, e, p: c.blocks[k].p, x: c.blocks[k].x, gone: false })),
+      }));
+      if (samAvail) applyAvail(samAvail);
+    }
+    function applyAvail(av) {
+      av.forEach((a, di) => {
+        const sh = model[di].shifts.find((x) => x.n === 'Sam');
+        if (!sh) return;
+        sh.gone = !a.on;
+        if (a.on) { sh.s = a.s; sh.e = a.e; }
+      });
+    }
+    const pct = (d, m) => ((m - d.s0) / (d.e0 - d.s0)) * 100;
+
+    function render() {
+      let n = 0;
+      colsEl.innerHTML = model.map((d, di) => {
+        const hours = (d.e0 - d.s0) / 60;
+        const lines = Array.from({ length: hours - 1 }, (_, h) => `<div class="gridline" style="top:${((h + 1) / hours) * 100}%"></div>`).join('');
+        return `
+        <div class="col">
+          <div class="col-head">${d.d} <span>${d.dt}</span></div>
+          <div class="col-range">${d.range}</div>
+          <div class="col-grid">
+            <div class="axis">${d.axis.map((a) => `<span>${a}</span>`).join('')}</div>
+            <div class="lane">${lines}${d.shifts.map((sh, k) => `
+              <div class="blk ${sh.p}${sh.gone ? ' gone' : ''}" data-d="${di}" data-k="${k}"
+                style="left:${sh.x}%;top:${pct(d, sh.s)}%;height:${pct(d, sh.e) - pct(d, sh.s)}%;--i:${n++}">
+                <span>${sh.n}</span><i class="blk-time">${clock(sh.s)}–${clock(sh.e)}</i>
+              </div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    function updateBlocks() {
+      $$('.blk', colsEl).forEach((el) => {
+        const d = model[+el.dataset.d], sh = d.shifts[+el.dataset.k];
+        el.style.top = `${pct(d, sh.s)}%`;
+        el.style.height = `${pct(d, sh.e) - pct(d, sh.s)}%`;
+        el.classList.toggle('gone', sh.gone);
+        $('.blk-time', el).textContent = `${clock(sh.s)}–${clock(sh.e)}`;
+      });
+    }
+    /* the exact clipboard format Cale-App produces (buildClipboardText) */
+    function hoursText() {
+      return model.map((d) => {
+        const vis = d.shifts.filter((s) => !s.gone);
+        if (!vis.length) return '';
+        return `Hours for ${d.name} (${d.dt}):\n${vis.map((s) => `${s.n}: ${clock(s.s)}-${clock(s.e)}`).join('\n')}\n`;
+      }).filter(Boolean).join('\n');
+    }
+    function renderLines() {
+      const out = [];
+      model.forEach((d) => {
+        const vis = d.shifts.filter((s) => !s.gone);
+        if (!vis.length) return;
+        out.push(`<span class="ln-h">Hours for ${d.name} (${d.dt}):</span>`);
+        vis.forEach((s) => out.push(`<span class="ln" data-n="${s.n}" data-h="${(s.e - s.s) / 60}">${s.n}: ${clock(s.s)}-${clock(s.e)}</span>`));
+      });
+      linesEl.innerHTML = out.join('');
+      highlight(null);
+    }
+
+    /* ----- focus management ----- */
+    let focus = null, leaveTimer = 0, drag = null, selectOpen = false;
+    let ptr = { x: -1e4, y: -1e4 };
+    /* "still on the card" means inside its box plus a margin. A focused card straightens,
+       scales and slides, so a strict :hover test would drop focus when the card moves out
+       from under a cursor that entered near its edge, and it would flicker back and forth. */
+    const near = (el, pad = 28) => {
+      const r = el.getBoundingClientRect();
+      return ptr.x >= r.left - pad && ptr.x <= r.right + pad && ptr.y >= r.top - pad && ptr.y <= r.bottom + pad;
+    };
+    function setFocus(k) {
+      clearTimeout(leaveTimer);
+      if (focus === k) return;
+      focus = k;
+      if (k) stage.dataset.focus = k; else delete stage.dataset.focus;
+      Object.entries(cards).forEach(([name, el]) => el.classList.toggle('is-focus', name === k));
+      if (k !== 'chat') { closeTray(); pinned = null; highlight(null); }
+    }
+    function maybeLeave() {
+      clearTimeout(leaveTimer);
+      leaveTimer = setTimeout(() => {
+        const el = focus && cards[focus];
+        if (!el || drag || selectOpen) return;
+        if (near(el)) return;
+        const ae = document.activeElement;
+        if (el.contains(ae) && ae.matches(':focus-visible')) return;
+        setFocus(null);
+      }, 180);
+    }
+    Object.entries(cards).forEach(([name, el]) => {
+      el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse' && !drag) setFocus(name); });
+      el.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') maybeLeave(); });
+      el.addEventListener('pointerdown', () => setFocus(name));
+      el.addEventListener('focusin', (e) => { if (e.target.matches(':focus-visible')) setFocus(name); });
+    });
+    document.addEventListener('pointerdown', (e) => { if (!e.target.closest('.hs-card')) setFocus(null); });
+    document.addEventListener('pointermove', (e) => {
+      ptr = { x: e.clientX, y: e.clientY };
+      if (focus && e.pointerType === 'mouse' && !near(cards[focus])) maybeLeave();
+    }, { passive: true });
+    stage.addEventListener('focusout', (e) => { if (!stage.contains(e.relatedTarget)) maybeLeave(); });
+
+    /* ----- flights + impact shimmer ----- */
+    const flightPath = $('#hsFlightPath');
+    const PLANE = '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M2.5 11.2 21 3.5l-5.6 17.2-4.1-6.6-8.8-2.9z" fill="#fff" stroke="#0d7bff" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.3 14.1 21 3.5" stroke="#0d7bff" stroke-width="1.4" stroke-linecap="round"/></svg>';
+    const toStage = (x, y) => { const r = stage.getBoundingClientRect(); return { x: x - r.left, y: y - r.top }; };
+    const centerOf = (el) => { const r = el.getBoundingClientRect(); return toStage(r.left + r.width / 2, r.top + r.height / 2); };
+    const easeIO = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+    function fly(d, ms, onLand) {
+      if (!motionOK) { onLand(); return; }
+      flightPath.setAttribute('d', d);
+      const len = flightPath.getTotalLength();
+      const plane = document.createElement('div');
+      plane.className = 'hs-plane';
+      plane.innerHTML = PLANE;
+      stage.appendChild(plane);
+      const t0 = performance.now();
+      let frame = 0;
+      requestAnimationFrame(function tick(now) {
+        const t = Math.min(1, (now - t0) / ms), l = easeIO(t) * len;
+        const p = flightPath.getPointAtLength(l);
+        const a = flightPath.getPointAtLength(Math.max(0, l - 1.5)), b = flightPath.getPointAtLength(Math.min(len, l + 1.5));
+        /* the icon's nose points up-right (-45°), so offset the heading by 45° */
+        const ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI + 45;
+        plane.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${ang}deg)`;
+        if (frame++ % 3 === 0) {
+          const dot = document.createElement('span');
+          dot.className = 'hs-trail';
+          dot.style.setProperty('--at', `translate(${p.x}px, ${p.y}px)`);
+          stage.appendChild(dot);
+          setTimeout(() => dot.remove(), 750);
+        }
+        if (t < 1) requestAnimationFrame(tick);
+        else { plane.remove(); onLand(); }
+      });
+    }
+    function shimmer(host, pt) {
+      const shine = $('.hs-shine', host);
+      retrigger(shine, 'hs-glow');
+      if (!motionOK) return;
+      const r = shine.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+      const z = r.width / shine.offsetWidth || 1;   /* account for CSS zoom on phones */
+      const rip = document.createElement('span');
+      rip.className = 'hs-ripple';
+      rip.style.left = `${(pt.x + sr.left - r.left) / z}px`;
+      rip.style.top = `${(pt.y + sr.top - r.top) / z}px`;
+      shine.appendChild(rip);
+      setTimeout(() => rip.remove(), 1050);
+    }
+
+    /* ----- 01: the availability form ----- */
+    const FORM_DAYS = [0, 1, 2];
+    const avail = [{ on: true, s: 900, e: 1200 }, { on: true, s: 900, e: 1200 }, { on: false, s: 900, e: 1200 }];
+    const opts = (from, to, sel) => {
+      let o = '';
+      for (let m = from; m <= to; m += 30) o += `<option value="${m}"${m === sel ? ' selected' : ''}>${label(m)}</option>`;
+      return o;
+    };
+    function renderForm() {
+      $('#hfDays').innerHTML = FORM_DAYS.map((di, i) => {
+        const a = avail[i], [s0, e0] = SPAN[di], nm = cap(SCHED[di].d);
+        const tab = a.on ? '' : ' tabindex="-1"';
+        return `
+          <div class="hs-day${a.on ? ' on' : ''}" data-i="${i}">
+            <label class="hs-day-top"><input type="checkbox" data-act="day"${a.on ? ' checked' : ''} /> ${nm}</label>
+            <div class="hs-times"><div class="hs-times-inner">
+              <select data-act="start" aria-label="${nm} start time"${tab}>${opts(s0, e0 - 30, a.s)}</select>
+              <span class="to">–</span>
+              <select data-act="end" aria-label="${nm} end time"${tab}>${opts(s0 + 30, e0, a.e)}</select>
+            </div></div>
+          </div>`;
+      }).join('');
+      syncAll();
+    }
+    function syncAll() {
+      const all = $('#hfAll'), on = avail.filter((a) => a.on).length;
+      all.checked = on === avail.length;
+      all.indeterminate = on > 0 && on < avail.length;
+    }
+    function setDay(i, on) {
+      avail[i].on = on;
+      const row = $(`.hs-day[data-i="${i}"]`, form);
+      row.classList.toggle('on', on);
+      $('[data-act="day"]', row).checked = on;
+      $$('select', row).forEach((s) => (on ? s.removeAttribute('tabindex') : s.setAttribute('tabindex', '-1')));
+    }
+    form.addEventListener('change', (e) => {
+      const t = e.target;
+      if (t.id === 'hfAll') { avail.forEach((_, i) => setDay(i, t.checked)); syncAll(); return; }
+      const row = t.closest('.hs-day');
+      if (!row) return;
+      const i = +row.dataset.i, a = avail[i];
+      if (t.dataset.act === 'day') { setDay(i, t.checked); syncAll(); $('#hfMsg').textContent = ''; return; }
+      const sSel = $('[data-act="start"]', row), eSel = $('[data-act="end"]', row);
+      a.s = +sSel.value; a.e = +eSel.value;
+      if (a.s >= a.e) {   /* keep the range valid, like the real form */
+        if (t === sSel) { a.e = a.s + 30; eSel.value = a.e; } else { a.s = a.e - 30; sSel.value = a.s; }
+      }
+      selectOpen = false;
+      maybeLeave();
+    });
+    form.addEventListener('pointerdown', (e) => { if (e.target.tagName === 'SELECT') selectOpen = true; });
+    form.addEventListener('focusout', (e) => { if (e.target.tagName === 'SELECT') { selectOpen = false; maybeLeave(); } });
+    form.addEventListener('keydown', (e) => { if (e.key === 'Escape') selectOpen = false; });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const msg = $('#hfMsg'), btn = $('#hfSubmit');
+      if (!avail.some((a) => a.on)) { msg.textContent = 'Select at least one day.'; retrigger(form, 'shake'); return; }
+      msg.textContent = '';
+      btn.textContent = 'Submitted ✓';
+      retrigger(btn, 'sent');
+      retrigger(form, 'popped');
+      const snapshot = avail.map((a) => ({ ...a }));
+      setTimeout(() => {
+        /* out of the form, a lap to the left, a loop, then into 02 */
+        const S = centerOf(btn);
+        const sr = stage.getBoundingClientRect(), fr = form.getBoundingClientRect(), ar = app.getBoundingClientRect();
+        const T = toStage(Math.min(fr.right + 80, ar.right - 80), ar.top + ar.height * 0.45);
+        const r = 30;
+        const C = { x: Math.max(S.x - 125, -sr.left + r + 16), y: Math.max(S.y - 210, r + 8) };
+        const path = `M${S.x},${S.y} C${S.x - 30},${S.y - 70} ${C.x + r + 14},${C.y + 70} ${C.x + r},${C.y}`
+          + ` A${r},${r} 0 1 0 ${C.x - r},${C.y} A${r},${r} 0 1 0 ${C.x + r},${C.y}`
+          + ` C${C.x + r},${C.y - 90} ${T.x - 130},${T.y - 120} ${T.x},${T.y}`;
+        fly(path, 1900, () => {
+          shimmer(app, T);
+          samAvail = snapshot;
+          applyAvail(snapshot);
+          updateBlocks();
+        });
+      }, 260);
+      setTimeout(() => { btn.classList.remove('sent'); btn.textContent = 'Submit Availability'; }, 2800);
+    });
+
+    /* ----- 02: drag shifts, resize from their edges, regenerate, copy ----- */
+    colsEl.addEventListener('pointerdown', (e) => {
+      const el = e.target.closest('.blk');
+      if (!el || e.button > 0) return;
+      const d = model[+el.dataset.d], sh = d.shifts[+el.dataset.k];
+      const r = el.getBoundingClientRect(), lane = el.parentElement.getBoundingClientRect();
+      const y = e.clientY - r.top, edge = Math.min(9, r.height / 4);
+      drag = {
+        el, d, sh, y0: e.clientY, s0: sh.s, e0: sh.e,
+        mode: y < edge ? 'top' : y > r.height - edge ? 'bottom' : 'move',
+        px: lane.height / ((d.e0 - d.s0) / 30),
+      };
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('dragging');
+      setFocus('app');
+      e.preventDefault();
+    });
+    colsEl.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const { d, sh, s0, e0, mode } = drag;
+      const delta = Math.round((e.clientY - drag.y0) / drag.px) * 30;
+      if (mode === 'move') {
+        const len = e0 - s0;
+        sh.s = Math.min(Math.max(s0 + delta, d.s0), d.e0 - len);
+        sh.e = sh.s + len;
+      } else if (mode === 'top') {
+        sh.s = Math.min(Math.max(s0 + delta, d.s0), sh.e - 30);
+      } else {
+        sh.e = Math.max(Math.min(e0 + delta, d.e0), sh.s + 30);
+      }
+      drag.el.style.top = `${pct(d, sh.s)}%`;
+      drag.el.style.height = `${pct(d, sh.e) - pct(d, sh.s)}%`;
+      $('.blk-time', drag.el).textContent = `${clock(sh.s)}–${clock(sh.e)}`;
+    });
+    const endDrag = () => {
+      if (!drag) return;
+      drag.el.classList.remove('dragging');
+      drag = null;
+      maybeLeave();
+    };
+    colsEl.addEventListener('pointerup', endDrag);
+    colsEl.addEventListener('pointercancel', endDrag);
+
+    $('#hsGen').addEventListener('click', (e) => {
+      retrigger(e.currentTarget, 'pressed');
+      buildModel();
+      app.classList.add('regen');
+      render();
+    });
+
+    const copyBtn = $('#hsCopy');
+    let copyTimer = 0;
+    copyBtn.addEventListener('click', () => {
+      const text = hoursText();
+      try { navigator.clipboard?.writeText(text).catch(() => {}); } catch (err) { /* clipboard is a bonus */ }
+      clearTimeout(copyTimer);
+      copyBtn.classList.add('copied');
+      $('.hs-copy-label', copyBtn).textContent = 'Copied ✓';
+      copyTimer = setTimeout(() => { copyBtn.classList.remove('copied'); $('.hs-copy-label', copyBtn).textContent = 'Copy to Clipboard'; }, 1800);
+      /* a short hop up and over into 03; if 02 is in front, aim for the part of 03 that shows */
+      const S = centerOf(copyBtn);
+      const cr = chat.getBoundingClientRect(), ar = app.getBoundingClientRect();
+      const behind = focus === 'app';
+      const x = behind ? Math.max(Math.min(cr.right - 40, ar.right + 50), cr.left + 40) : cr.left + cr.width * 0.55;
+      const T = toStage(x, cr.top + 70);
+      const path = `M${S.x},${S.y} C${S.x + 20},${S.y - 150} ${T.x + 70},${T.y - 190} ${T.x},${T.y}`;
+      fly(path, 1150, () => {
+        if (behind) retrigger(chat, 'peek');
+        shimmer(bubble, T);
+        renderLines();
+        $$('.hs-react.staff', chat).forEach((el) => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
+        $('#hcReacts').classList.add('again');
+      });
+    });
+
+    /* ----- 03: find someone's shifts, react to the post ----- */
+    let pinned = null;
+    function highlight(n) {
+      linesEl.classList.toggle('hl', !!n);
+      let count = 0, hours = 0;
+      $$('.ln', linesEl).forEach((l) => {
+        const m = l.dataset.n === n;
+        l.classList.toggle('match', m);
+        if (m) { count++; hours += +l.dataset.h; }
+      });
+      sumEl.textContent = n ? `${n}: ${count} shift${count === 1 ? '' : 's'} · ${hours}h this week` : '';
+      sumEl.classList.toggle('on', !!n);
+    }
+    linesEl.addEventListener('pointerover', (e) => { const ln = e.target.closest('.ln'); if (ln && !pinned) highlight(ln.dataset.n); });
+    linesEl.addEventListener('pointerleave', () => { if (!pinned) highlight(null); });
+    linesEl.addEventListener('click', (e) => {
+      const ln = e.target.closest('.ln');
+      if (!ln) return;
+      pinned = pinned === ln.dataset.n ? null : ln.dataset.n;
+      highlight(pinned);
+    });
+
+    const tray = $('#hcTray'), addBtn = $('#hcAdd');
+    function closeTray() { tray.classList.remove('open'); addBtn.setAttribute('aria-expanded', 'false'); }
+    addBtn.addEventListener('click', () => {
+      const open = !tray.classList.contains('open');
+      tray.classList.toggle('open', open);
+      addBtn.setAttribute('aria-expanded', String(open));
+    });
+    tray.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-e]');
+      if (!b) return;
+      let mine = $('.hs-react.mine', chat);
+      if (!mine) {
+        mine = document.createElement('button');
+        mine.type = 'button';
+        mine.className = 'hs-react mine';
+        mine.setAttribute('aria-label', 'Remove your reaction');
+        addBtn.parentElement.before(mine);
+      } else {
+        mine.style.animation = 'none'; void mine.offsetWidth; mine.style.animation = '';
+      }
+      mine.textContent = `${b.dataset.e} You`;
+      closeTray();
+    });
+    chat.addEventListener('click', (e) => { const m = e.target.closest('.hs-react.mine'); if (m) m.remove(); });
+    document.addEventListener('pointerdown', (e) => { if (!e.target.closest('.hs-react-add')) closeTray(); });
+    chat.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTray(); });
+
+    buildModel();
+    render();
+    renderLines();
+    renderForm();
+  })();
   buildForms($('#formsLayer'));
   const { sides, pops } = buildBubbles($('#chaosLayer'), $('#genBtn'));
   buildPeople($('#people'));
@@ -328,7 +727,7 @@
 
     const SPEED = 380;                 /* px per second — watchable but not sluggish */
     let autoOn = false, paused = false, raf = null, lastT = 0, expectedY = -1, resumeTimer = null;
-    let ended = false, runLimit = Infinity;
+    let ended = false, toBottom = false;
     const maxScroll = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
     const isLanding = () => scrollY < innerHeight * 0.6;   /* still on the hero */
     /* the tour drives the scrubbed animation and hands off where the reading starts:
@@ -348,18 +747,22 @@
       if (!lastT) lastT = t;
       const dt = Math.min((t - lastT) / 1000, 0.05);
       lastT = t;
-      const next = Math.min(scrollY + SPEED * dt, runLimit);
+      /* the limit is re-read every frame, so a late layout refresh can't move the stop point */
+      const limit = toBottom ? maxScroll() : tourEnd();
+      const next = Math.min(scrollY + SPEED * dt, limit);
       scrollTo(0, next);
       expectedY = Math.round(next);
-      if (next >= runLimit - 1) { ended = true; stop(); return; }   /* done — hand back control */
+      if (next >= limit - 1) { ended = true; stop(); return; }   /* done — hand back control */
       raf = requestAnimationFrame(step);
     }
-    function start() {
+    function start(explicit = false) {
       if (autoOn || paused) return;
       clearTimeout(resumeTimer);
-      /* if we're already at/past the story's end, an explicit Play means "take me down" */
-      const storyEnd = tourEnd();
-      runLimit = scrollY >= storyEnd - 2 ? maxScroll() : storyEnd;
+      /* past the story's end: an explicit Play means "take me down"; an automatic resume
+         (after the reader touched or scrolled) must never carry them past "Under the hood" */
+      const pastEnd = scrollY >= tourEnd() - 2;
+      if (pastEnd && !explicit) { ended = true; render(); return; }
+      toBottom = pastEnd;
       autoOn = true; lastT = 0;
       raf = requestAnimationFrame(step);
       render();
@@ -386,6 +789,9 @@
 
     /* user intent = real input; auto-scroll's own scrollTo never fires these */
     addEventListener('wheel', userTakeover, { passive: true });
+    /* playing with the hero cards is reading too: don't scroll the page out from under it */
+    const heroStage = $('#heroStage');
+    if (heroStage) ['pointermove', 'pointerdown', 'focusin', 'input'].forEach((ev) => heroStage.addEventListener(ev, userTakeover, { passive: true }));
     addEventListener('touchmove', userTakeover, { passive: true });
     addEventListener('keydown', (e) => {
       if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'].includes(e.key)) userTakeover();
@@ -397,7 +803,7 @@
 
     btn.addEventListener('click', () => {
       if (autoOn) { paused = true; stop(); clearTimeout(resumeTimer); }
-      else { paused = false; ended = false; clearTimeout(resumeTimer); start(); }
+      else { paused = false; ended = false; clearTimeout(resumeTimer); start(true); }
     });
 
     /* hero "Watch how it works" starts the same tour */
