@@ -27,7 +27,7 @@
   --p-green: #38845e;
   --p-orange: #dd9a3f;
   --p-purple: #8364ca;
-  --p-red: #d44244;
+  --p-red: #d9595b;   /* original red (Casey); kept as-is by choice, below 4.5:1 with white */
   --blue-btn: #006ff5;   /* brand blue, a hair deeper: white text on it passes 4.5:1 */
   --line: rgba(16, 32, 64, 0.1);
   --line-strong: rgba(16, 32, 64, 0.18);
